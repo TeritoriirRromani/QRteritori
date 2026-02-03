@@ -38,8 +38,18 @@ function showRandomVerse() {
 showRandomVerse();
 const verseInterval = setInterval(showRandomVerse, 5000);
 
+// 🔹 Luăm key-ul din URL
 const params = new URLSearchParams(window.location.search);
 const k = params.get("k");
+
+// 🔹 Extragem prenumele din key (ultimul cuvânt)
+function getFirstName(fullName) {
+  if (!fullName) return "";
+  const parts = fullName.trim().split(" ");
+  return parts[parts.length - 1];
+}
+
+const firstName = getFirstName(k);
 
 if (!k) {
   titleEl.innerText = "Lipsește parametrul k";
@@ -57,12 +67,16 @@ if (!k) {
         return;
       }
 
+      // 🔁 Redirect automat dacă e un singur link
       if (data.length === 1) {
         window.location.href = data[0].url;
         return;
       }
 
-      titleEl.innerText = "Alege unde vrei să mergi";
+      // ✅ TITLU PERSONALIZAT
+      titleEl.innerText = firstName
+        ? `${firstName}, alege unde vrei să mergi`
+        : "Alege unde vrei să mergi";
 
       data.forEach(item => {
         const btn = document.createElement("button");
