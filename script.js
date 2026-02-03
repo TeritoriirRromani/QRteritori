@@ -82,12 +82,19 @@ if (!k) {
       titleEl.innerText = `Alege unde vrei să mergi, ${prenume}`;
 
       // 🔹 Butoane
-      data.forEach(item => {
-        const btn = document.createElement("button");
-        btn.innerText = item.label || "Deschide link";
-        btn.onclick = () => window.location.href = item.url;
-        buttonsEl.appendChild(btn);
-      });
+      data.forEach((item, index) => {
+  const btn = document.createElement("button");
+  btn.innerText = item.label || "Deschide link";
+
+  // 🔹 mic delay la apariție (una după alta)
+  btn.style.animationDelay = `${index * 0.08}s`;
+
+  // 🔹 pulse discret la 4 secunde
+  btn.classList.add("pulse");
+
+  btn.onclick = () => window.location.href = item.url;
+  buttonsEl.appendChild(btn);
+});
     })
     .catch(err => {
       loaderEl.style.display = "none";
