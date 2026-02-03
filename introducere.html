@@ -2,49 +2,50 @@
 <html lang="ro">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Introducere teritoriu</title>
+  <link rel="stylesheet" href="introducere-style.css">
 </head>
 <body>
-  <h1>Introducere teritoriu</h1>
+  <div class="form-container">
+    <h1>Introducere teritoriu</h1>
 
-  <label for="nume">Nume frate</label>
-  <select id="nume"></select>
+    <div class="form-group">
+      <label for="nume">Nume frate</label>
+      <select id="nume"></select>
+    </div>
 
-  <br><br>
+    <div class="form-group">
+      <label for="teritoriu">Teritoriu</label>
+      <select id="teritoriu"></select>
+    </div>
 
-  <label for="teritoriu">Teritoriu</label>
-  <select id="teritoriu"></select>
+    <div class="form-group">
+      <label for="data">Data atribuirii</label>
+      <input type="date" id="data" />
+    </div>
 
-  <br><br>
+    <button type="button" onclick="trimite()">Salvează</button>
 
-  <label for="data">Data atribuirii</label>
-  <input type="date" id="data" />
-
-  <br><br>
-
-  <button type="button" onclick="trimite()">Salvează</button>
-
-  <p id="status"></p>
+    <p id="status"></p>
+  </div>
 
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvpvw0plV6WBZOVUFIBYujsp4vBu0OcWJcKQk3GATjoRY0IujxKjsUA5QnCI4enpyC/exec';
     
     function incarcaNume() {
-      console.log('incarcaNume apelată');
       const script = document.createElement('script');
       script.src = SCRIPT_URL + '?action=nume&callback=populateNume';
       document.body.appendChild(script);
     }
 
     function incarcaTeritoriiLibere() {
-      console.log('incarcaTeritoriiLibere apelată');
       const script = document.createElement('script');
       script.src = SCRIPT_URL + '?action=teritoriiLibere&callback=populateTeritorii';
       document.body.appendChild(script);
     }
 
     window.populateNume = function(names) {
-      console.log('populateNume apelată cu:', names);
       const sel = document.getElementById('nume');
       sel.innerHTML = '';
       names.forEach(n => {
@@ -56,7 +57,6 @@
     };
 
     window.populateTeritorii = function(list) {
-      console.log('populateTeritorii apelată cu:', list);
       const sel = document.getElementById('teritoriu');
       sel.innerHTML = '';
       list.forEach(t => {
@@ -73,7 +73,9 @@
       const data = document.getElementById('data').value;
 
       if (!nume || !teritoriu || !data) {
-        document.getElementById('status').textContent = 'Completează toate câmpurile!';
+        const status = document.getElementById('status');
+        status.textContent = 'Completează toate câmpurile!';
+        status.className = 'error';
         return;
       }
 
@@ -88,10 +90,14 @@
           body: params
         });
         const text = await resp.text();
-        document.getElementById('status').textContent = text;
+        const status = document.getElementById('status');
+        status.textContent = text;
+        status.className = 'success';
         await incarcaTeritoriiLibere();
       } catch (err) {
-        document.getElementById('status').textContent = 'Eroare la trimitere: ' + err;
+        const status = document.getElementById('status');
+        status.textContent = 'Eroare la trimitere: ' + err;
+        status.className = 'error';
       }
     }
 
