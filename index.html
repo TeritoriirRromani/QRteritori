@@ -84,24 +84,31 @@
       fetch(AS_URL_BASE + "?k=" + encodeURIComponent(k))
         .then(r => r.json())
         .then(data => {
-          document.getElementById("loader").style.display = "none";
+  document.getElementById("loader").style.display = "none";
 
-          if (!data.length) {
-            document.getElementById("title").innerText = "Nu există linkuri pentru acest cod";
-            return;
-          }
+  if (!data.length) {
+    document.getElementById("title").innerText = "Nu există linkuri pentru acest cod";
+    return;
+  }
 
-          document.getElementById("title").innerText = "Alege unde vrei să mergi";
+  // 👉 REDIRECT AUTOMAT dacă e un singur link
+  if (data.length === 1) {
+    window.location.href = data[0].url;
+    return;
+  }
 
-          data.forEach(item => {
-            const btn = document.createElement("button");
-            btn.innerText = item.label || "Deschide link";
-            btn.onclick = () => {
-              window.location.href = item.url;
-            };
-            document.getElementById("buttons").appendChild(btn);
-          });
-        })
+  document.getElementById("title").innerText = "Alege unde vrei să mergi";
+
+  data.forEach(item => {
+    const btn = document.createElement("button");
+    btn.innerText = item.label || "Deschide link";
+    btn.onclick = () => {
+      window.location.href = item.url;
+    };
+    document.getElementById("buttons").appendChild(btn);
+  });
+})
+
         .catch(err => {
           document.getElementById("loader").style.display = "none";
           document.getElementById("title").innerText = "Eroare la încărcare";
