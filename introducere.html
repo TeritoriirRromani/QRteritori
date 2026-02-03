@@ -28,7 +28,7 @@
 
   <script>
     // 🔗 pune aici URL-ul Web App-ului tău Apps Script (cel cu doGet/doPost)
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUrrSMvpdmNwQxPwBvxjG0A8o1k17U1MLXYlYgfMRMk.z9so2w4uc3BcB0zdovDcy/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUrrSMvpdmNwQxPwBvxjG0A8o1k17U1MLXYlYgfMRMk.z9so2w4uc3BcB0zdovDcy/exec';
     async function incarcaNume() {
       const resp = await fetch(SCRIPT_URL + '?action=nume');
       const names = await resp.json();
