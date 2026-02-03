@@ -1,3 +1,11 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introducere teritoriu</title>
+  <link rel="stylesheet" href="introducere-style.css">
+</head>
 <body>
   <div class="form-container">
     <h1>Introducere teritoriu</h1>
@@ -10,7 +18,7 @@
     </div>
 
     <div class="form-group">
-      <label for="teritoriu">Teritoriu</label>
+      <label for="teritoriu">Territoriu</label>
       <select id="teritoriu">
         <option value="">-- Selectează un teritoriu --</option>
       </select>
@@ -96,7 +104,6 @@
         status.textContent = text;
         status.className = 'success';
         
-        // Resetează formul după 2 secunde
         setTimeout(() => {
           resetForm();
           incarcaTeritoriiLibere();
@@ -116,3 +123,4 @@
     });
   </script>
 </body>
+</html>
