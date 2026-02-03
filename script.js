@@ -22,11 +22,14 @@ const verses = [
   "„Înțelepciunea lui Dumnezeu se vede chiar și în cele mai mici lucruri.”"
 ];
 
+// 🔹 Elemente din pagină
 const verseEl = document.getElementById("verse");
 const titleEl = document.getElementById("title");
+const subtitleEl = document.getElementById("subtitle");
 const loaderEl = document.getElementById("loader");
 const buttonsEl = document.getElementById("buttons");
 
+// 🔹 Afișare text random
 function showRandomVerse() {
   verseEl.style.opacity = 0;
   setTimeout(() => {
@@ -38,28 +41,30 @@ function showRandomVerse() {
 showRandomVerse();
 const verseInterval = setInterval(showRandomVerse, 5000);
 
-// 🔹 Luăm key-ul din URL
+// 🔹 Citim parametrul k
 const params = new URLSearchParams(window.location.search);
 const k = params.get("k");
 
-// 🔹 Extragem prenumele din key (ultimul cuvânt)
-function getFirstName(fullName) {
-  if (!fullName) return "";
-  const parts = fullName.trim().split(" ");
-  return parts[parts.length - 1];
+// 🔹 Extragem prenumele (din "Abrudan Alin" → "Alin")
+let prenume = "";
+if (k) {
+  prenume = k.trim().split(" ").pop();
+  const nameEl = document.getElementById("name");
+  if (nameEl) nameEl.innerText = prenume;
 }
 
-const firstName = getFirstName(k);
-
+// 🔹 Dacă lipsește k
 if (!k) {
   titleEl.innerText = "Lipsește parametrul k";
   loaderEl.style.display = "none";
+  subtitleEl.style.display = "none";
   clearInterval(verseInterval);
 } else {
   fetch(AS_URL_BASE + "?k=" + encodeURIComponent(k))
     .then(r => r.json())
     .then(data => {
       loaderEl.style.display = "none";
+      subtitleEl.style.display = "none";
       clearInterval(verseInterval);
 
       if (!data.length) {
@@ -67,17 +72,16 @@ if (!k) {
         return;
       }
 
-      // 🔁 Redirect automat dacă e un singur link
+      // 🔹 Redirect automat dacă există un singur link
       if (data.length === 1) {
         window.location.href = data[0].url;
         return;
       }
 
-      // ✅ TITLU PERSONALIZAT
-      titleEl.innerText = firstName
-        ? `${firstName}, alege unde vrei să mergi`
-        : "Alege unde vrei să mergi";
+      // 🔹 Titlu personalizat
+      titleEl.innerText = `Alege unde vrei să mergi, ${prenume}`;
 
+      // 🔹 Butoane
       data.forEach(item => {
         const btn = document.createElement("button");
         btn.innerText = item.label || "Deschide link";
@@ -87,6 +91,7 @@ if (!k) {
     })
     .catch(err => {
       loaderEl.style.display = "none";
+      subtitleEl.style.display = "none";
       titleEl.innerText = "Eroare la încărcare";
       clearInterval(verseInterval);
       console.error(err);
