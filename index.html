@@ -2,31 +2,33 @@
 <html lang="ro">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Alege link</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- CSS -->
+  <!-- CSS extern -->
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div class="container">
-    <h2 id="title">Se încarcă...</h2>
-    <div class="subtitle" id="subtitle">Te rugăm să aștepți un moment</div>
+  <h2 id="title">
+    Se încarcă, <span id="name"></span>...
+  </h2>
 
-    <div id="verse"></div>
-
-    <div id="buttons"></div>
-
-    <div class="lds-ring" id="loader">
-      <div></div><div></div><div></div><div></div>
-    </div>
+  <div class="subtitle" id="subtitle">
+    Te rugăm să aștepți un moment
   </div>
 
-  <!-- JS -->
+  <div id="verse"></div>
+
+  <div id="buttons"></div>
+
+  <div class="lds-ring" id="loader">
+    <div></div><div></div><div></div><div></div>
+  </div>
+
+  <!-- JS extern -->
   <script src="script.js"></script>
+
 </body>
 </html>
-
