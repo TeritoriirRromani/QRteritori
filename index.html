@@ -1,76 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
-  <meta charset="utf-8">
-  <title></title>
-  <style>
-      body {
-        background-color: lightblue;
-        text-align: center;
-      }
-      
-      .lds-ring {
-  display: inline-block;
-  position: relative;
-  width: 80px;
-  height: 80px;
-}
-.lds-ring div {
-  box-sizing: border-box;
-  display: block;
-  position: absolute;
-  width: 64px;
-  height: 64px;
-  margin: 8px;
-  border: 8px solid #fff;
-  border-radius: 50%;
-  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: #fff transparent transparent transparent;
-}
-.lds-ring div:nth-child(1) {
-  animation-delay: -0.45s;
-}
-.lds-ring div:nth-child(2) {
-  animation-delay: -0.3s;
-}
-.lds-ring div:nth-child(3) {
-  animation-delay: -0.15s;
-}
-@keyframes lds-ring {
-  0% {
-    transform: rotate(0deg);
+<meta charset="UTF-8">
+<title>Teritorii</title>
+<style>
+  body {
+    background: #e6f2ff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 40px;
   }
-  100% {
-    transform: rotate(360deg);
+  h2 {
+    margin-bottom: 20px;
   }
-}
-
-  </style>
+  .btn {
+    display: block;
+    margin: 12px auto;
+    padding: 14px 20px;
+    max-width: 320px;
+    background: #1e88e5;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+  .btn:hover {
+    background: #1565c0;
+  }
+  .loader {
+    margin-top: 40px;
+  }
+</style>
 </head>
-<body>
-  <script>
-    const AS_URL_BASE = "https://script.google.com/macros/s/AKfycbwNhNZNyKnCTZxKvOLigRs2EmTH0dvXVYRQWk_B6QAq3IQBDDQRqJTyd5CLAx8f63Xj/exec";
-    
-    var url = document.location.href;
-    var k = url.substr(url.lastIndexOf("k=")+2);
-    
-    if(k){
-      fetch(AS_URL_BASE+'?k='+k)
-      .then(r => r.text())
-      .then((r) => {
-        console.log(r);
-        //document.write(r);
-        if(r){
-          document.location.replace(r);
-        }
-      })
-      .catch(err => console.log(err))
-    }
 
-  </script>
-  
-  <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
-  
-  
+<body>
+
+<h2 id="titlu">Se încarcă...</h2>
+<div id="lista"></div>
+
+<script>
+const AS_URL = "https://script.google.com/macros/s/AKfycbwNhNZNyKnCTZxKvOLigRs2EmTH0dvXVYRQWk_B6QAq3IQBDDQRqJTyd5CLAx8f63Xj/exec";
+
+const params = new URLSearchParams(window.location.search);
+const k = params.get("k");
+
+if (!k) {
+  document.getElementById("titlu").innerText = "Link invalid";
+} else {
+  fetch(AS_URL + "?k=" + encodeURIComponent(k))
+    .then(r => r.json())
+    .then(data => {
+      if (!data.length) {
+        document.getElementById("titlu").innerText = "Nu ai teritorii active";
+        return;
+      }
+
+      // un singur teritoriu → redirect
+      if (data.length === 1) {
+        window.location.replace(data[0].link);
+        return;
+      }
+
+      // mai multe teritorii → butoane
+      document.getElementById("titlu").innerText = "Alege teritoriul";
+
+      const lista = document.getElementById("lista");
+      data.forEach(t => {
+        const a = document.createElement("a");
+        a.href = t.link;
+        a.innerText = t.nume;
+        a.className = "btn";
+        lista.appendChild(a);
+      });
+    })
+    .catch(() => {
+      document.getElementById("titlu").innerText = "Eroare la încărcare";
+    });
+}
+</script>
+
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
