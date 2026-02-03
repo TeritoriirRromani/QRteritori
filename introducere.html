@@ -27,44 +27,50 @@
   <p id="status"></p>
 
   <script>
-    // 🔗 pune aici URL-ul Web App-ului tău Apps Script (cel cu doGet/doPost)
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvpvw0plV6WBZOVUFIBYujsp4vBu0OcWJcKQk3GATjoRY0IujxKjsUA5QnCI4enpyC/exec';
-  function incarcaNume() {
-    const script = document.createElement('script');
-    script.src = SCRIPT_URL + '?action=nume&callback=populateNume';
-    document.body.appendChild(script);
-  }
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvpvw0plV6WBZOVUFIBYujsp4vBu0OcWJcKQk3GATjoRY0IujxKjsUA5QnCI4enpyC/exec';
+    
+    function incarcaNume() {
+      console.log('incarcaNume apelată');
+      const script = document.createElement('script');
+      script.src = SCRIPT_URL + '?action=nume&callback=populateNume';
+      document.body.appendChild(script);
+    }
 
-window.populateNume = function(names) {
-  console.log('populateNume apelată cu:', names);
-  const sel = document.getElementById('nume');
-  sel.innerHTML = '';
-  names.forEach(n => {
-    const opt = document.createElement('option');
-    opt.value = n;
-    opt.textContent = n;
-    sel.appendChild(opt);
-  });
-};
+    function incarcaTeritoriiLibere() {
+      console.log('incarcaTeritoriiLibere apelată');
+      const script = document.createElement('script');
+      script.src = SCRIPT_URL + '?action=teritoriiLibere&callback=populateTeritorii';
+      document.body.appendChild(script);
+    }
 
-window.populateTeritorii = function(list) {
-  console.log('populateTeritorii apelată cu:', list);
-  const sel = document.getElementById('teritoriu');
-  sel.innerHTML = '';
-  list.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t;
-    opt.textContent = t;
-    sel.appendChild(opt);
-  });
-};
+    window.populateNume = function(names) {
+      console.log('populateNume apelată cu:', names);
+      const sel = document.getElementById('nume');
+      sel.innerHTML = '';
+      names.forEach(n => {
+        const opt = document.createElement('option');
+        opt.value = n;
+        opt.textContent = n;
+        sel.appendChild(opt);
+      });
+    };
 
-
+    window.populateTeritorii = function(list) {
+      console.log('populateTeritorii apelată cu:', list);
+      const sel = document.getElementById('teritoriu');
+      sel.innerHTML = '';
+      list.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        sel.appendChild(opt);
+      });
+    };
 
     async function trimite() {
       const nume = document.getElementById('nume').value;
       const teritoriu = document.getElementById('teritoriu').value;
-      const data = document.getElementById('data').value; // yyyy-mm-dd
+      const data = document.getElementById('data').value;
 
       if (!nume || !teritoriu || !data) {
         document.getElementById('status').textContent = 'Completează toate câmpurile!';
@@ -83,22 +89,18 @@ window.populateTeritorii = function(list) {
         });
         const text = await resp.text();
         document.getElementById('status').textContent = text;
-
-        // după salvare, reîmprospătăm lista de teritorii libere
         await incarcaTeritoriiLibere();
       } catch (err) {
         document.getElementById('status').textContent = 'Eroare la trimitere: ' + err;
       }
     }
 
-    // când se încarcă pagina, luăm datele
-     window.addEventListener('load', () => {
-    incarcaNume();
-    incarcaTeritoriiLibere();
-    const azi = new Date().toISOString().slice(0, 10);
-    document.getElementById('data').value = azi;
-  });
-
+    window.addEventListener('load', () => {
+      incarcaNume();
+      incarcaTeritoriiLibere();
+      const azi = new Date().toISOString().slice(0, 10);
+      document.getElementById('data').value = azi;
+    });
   </script>
 </body>
 </html>
