@@ -29,31 +29,40 @@
   <script>
     // 🔗 pune aici URL-ul Web App-ului tău Apps Script (cel cu doGet/doPost)
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUrrSMvpdmNwQxPwBvxjG0A8o1k17U1MLXYlYgfMRMk.z9so2w4uc3BcB0zdovDcy/exec';
-    async function incarcaNume() {
-      const resp = await fetch(SCRIPT_URL + '?action=nume');
-      const names = await resp.json();
-      const sel = document.getElementById('nume');
-      sel.innerHTML = '';
-      names.forEach(n => {
-        const opt = document.createElement('option');
-        opt.value = n;
-        opt.textContent = n;
-        sel.appendChild(opt);
-      });
-    }
+  function incarcaNume() {
+    const script = document.createElement('script');
+    script.src = SCRIPT_URL + '?action=nume&callback=populateNume';
+    document.body.appendChild(script);
+  }
 
-    async function incarcaTeritoriiLibere() {
-      const resp = await fetch(SCRIPT_URL + '?action=teritoriiLibere');
-      const list = await resp.json();
-      const sel = document.getElementById('teritoriu');
-      sel.innerHTML = '';
-      list.forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t;
-        opt.textContent = t;
-        sel.appendChild(opt);
-      });
-    }
+  window.populateNume = function(names) {
+    const sel = document.getElementById('nume');
+    sel.innerHTML = '';
+    names.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n;
+      opt.textContent = n;
+      sel.appendChild(opt);
+    });
+  };
+
+     function incarcaTeritoriiLibere() {
+    const script = document.createElement('script');
+    script.src = SCRIPT_URL + '?action=teritoriiLibere&callback=populateTeritorii';
+    document.body.appendChild(script);
+  }
+
+  window.populateTeritorii = function(list) {
+    const sel = document.getElementById('teritoriu');
+    sel.innerHTML = '';
+    list.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      sel.appendChild(opt);
+    });
+  };
+
 
     async function trimite() {
       const nume = document.getElementById('nume').value;
@@ -86,13 +95,13 @@
     }
 
     // când se încarcă pagina, luăm datele
-    window.addEventListener('load', () => {
-      incarcaNume();
-      incarcaTeritoriiLibere();
-      // data implicit azi
-      const azi = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
-      document.getElementById('data').value = azi;
-    });
+     window.addEventListener('load', () => {
+    incarcaNume();
+    incarcaTeritoriiLibere();
+    const azi = new Date().toISOString().slice(0, 10);
+    document.getElementById('data').value = azi;
+  });
+
   </script>
 </body>
 </html>
