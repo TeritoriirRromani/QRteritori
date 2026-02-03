@@ -1,1 +1,99 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <title>Introducere teritoriu</title>
+</head>
+<body>
+  <h1>Introducere teritoriu</h1>
 
+  <label for="nume">Nume frate</label>
+  <select id="nume"></select>
+
+  <br><br>
+
+  <label for="teritoriu">Teritoriu</label>
+  <select id="teritoriu"></select>
+
+  <br><br>
+
+  <label for="data">Data atribuirii</label>
+  <input type="date" id="data" />
+
+  <br><br>
+
+  <button type="button" onclick="trimite()">Salvează</button>
+
+  <p id="status"></p>
+
+  <script>
+    // 🔗 pune aici URL-ul Web App-ului tău Apps Script (cel cu doGet/doPost)
+    const SCRIPT_URL = 'https://script.google.com/macros/s/XXXXXXX/exec';
+
+    async function incarcaNume() {
+      const resp = await fetch(SCRIPT_URL + '?action=nume');
+      const names = await resp.json();
+      const sel = document.getElementById('nume');
+      sel.innerHTML = '';
+      names.forEach(n => {
+        const opt = document.createElement('option');
+        opt.value = n;
+        opt.textContent = n;
+        sel.appendChild(opt);
+      });
+    }
+
+    async function incarcaTeritoriiLibere() {
+      const resp = await fetch(SCRIPT_URL + '?action=teritoriiLibere');
+      const list = await resp.json();
+      const sel = document.getElementById('teritoriu');
+      sel.innerHTML = '';
+      list.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        sel.appendChild(opt);
+      });
+    }
+
+    async function trimite() {
+      const nume = document.getElementById('nume').value;
+      const teritoriu = document.getElementById('teritoriu').value;
+      const data = document.getElementById('data').value; // yyyy-mm-dd
+
+      if (!nume || !teritoriu || !data) {
+        document.getElementById('status').textContent = 'Completează toate câmpurile!';
+        return;
+      }
+
+      const params = new URLSearchParams();
+      params.append('nume', nume);
+      params.append('teritoriu', teritoriu);
+      params.append('data', data);
+
+      try {
+        const resp = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: params
+        });
+        const text = await resp.text();
+        document.getElementById('status').textContent = text;
+
+        // după salvare, reîmprospătăm lista de teritorii libere
+        await incarcaTeritoriiLibere();
+      } catch (err) {
+        document.getElementById('status').textContent = 'Eroare la trimitere: ' + err;
+      }
+    }
+
+    // când se încarcă pagina, luăm datele
+    window.addEventListener('load', () => {
+      incarcaNume();
+      incarcaTeritoriiLibere();
+      // data implicit azi
+      const azi = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
+      document.getElementById('data').value = azi;
+    });
+  </script>
+</body>
+</html>
