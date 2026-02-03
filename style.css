@@ -72,12 +72,9 @@ button {
   background: linear-gradient(180deg, #5f83c2 0%, #4a6da7 100%);
   color: #ffffff;
 
-  box-shadow: 0 10px 22px rgba(74, 109, 167, 0.35);
+  box-shadow: 0 8px 18px rgba(74, 109, 167, 0.3);
 
-  /* APARIȚIE SUBTILĂ */
-  opacity: 0;
-  transform: scale(0.95);
-  animation: appear 0.45s ease-out forwards;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* HOVER */
