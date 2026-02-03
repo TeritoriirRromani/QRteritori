@@ -1,94 +1,114 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-<meta charset="UTF-8">
-<title>Teritorii</title>
-<style>
-  body {
-    background: #e6f2ff;
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 40px;
-  }
-  h2 {
-    margin-bottom: 20px;
-  }
-  .btn {
-    display: block;
-    margin: 12px auto;
-    padding: 14px 20px;
-    max-width: 320px;
-    background: #1e88e5;
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
-    font-size: 16px;
-  }
-  .btn:hover {
-    background: #1565c0;
-  }
-  .loader {
-    margin-top: 40px;
-  }
-</style>
+  <meta charset="utf-8">
+  <title>Alege link</title>
+
+  <style>
+    body {
+      background-color: lightblue;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      padding-top: 50px;
+    }
+
+    h2 {
+      margin-bottom: 30px;
+    }
+
+    button {
+      display: block;
+      margin: 15px auto;
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #1976d2;
+      color: white;
+      min-width: 250px;
+    }
+
+    button:hover {
+      background-color: #125aa0;
+    }
+
+    .lds-ring {
+      display: inline-block;
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+    .lds-ring div {
+      box-sizing: border-box;
+      display: block;
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      margin: 8px;
+      border: 8px solid #fff;
+      border-radius: 50%;
+      animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      border-color: #fff transparent transparent transparent;
+    }
+    .lds-ring div:nth-child(1) { animation-delay: -0.45s; }
+    .lds-ring div:nth-child(2) { animation-delay: -0.3s; }
+    .lds-ring div:nth-child(3) { animation-delay: -0.15s; }
+    @keyframes lds-ring {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body>
 
-<h2 id="titlu">Se încarcă...</h2>
-<div id="lista"></div>
+  <h2 id="title">Se încarcă...</h2>
 
-<script>
-const AS_URL = "https://script.google.com/macros/s/AKfycbwNhNZNyKnCTZxKvOLigRs2EmTH0dvXVYRQWk_B6QAq3IQBDDQRqJTyd5CLAx8f63Xj/exec";
+  <div id="buttons"></div>
 
-const params = new URLSearchParams(window.location.search);
-const k = params.get("k");
+  <div class="lds-ring" id="loader">
+    <div></div><div></div><div></div><div></div>
+  </div>
 
-if (!k) {
-  document.getElementById("titlu").innerText = "Link invalid";
-} else {
-  fetch(AS_URL + "?k=" + encodeURIComponent(k))
-    .then(r => r.json())
-    .then(data => {
-      if (!data.length) {
-        document.getElementById("titlu").innerText = "Nu ai teritorii active";
-        return;
-      }
+  <script>
+    const AS_URL_BASE = "https://script.google.com/macros/s/AKfycbwNhNZNyKnCTZxKvOLigRs2EmTH0dvXVYRQWk_B6QAq3IQBDDQRqJTyd5CLAx8f63Xj/exec";
 
-      // un singur teritoriu → redirect
-      if (data.length === 1) {
-        window.location.replace(data[0].link);
-        return;
-      }
+    const params = new URLSearchParams(window.location.search);
+    const k = params.get("k");
 
-      // mai multe teritorii → butoane
-      document.getElementById("titlu").innerText = "Alege teritoriul";
+    if (!k) {
+      document.getElementById("title").innerText = "Lipsește parametrul k";
+      document.getElementById("loader").style.display = "none";
+    } else {
+      fetch(AS_URL_BASE + "?k=" + encodeURIComponent(k))
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById("loader").style.display = "none";
 
-      const lista = document.getElementById("lista");
-      data.forEach(t => {
-        const a = document.createElement("a");
-        a.href = t.link;
-        a.innerText = t.nume;
-        a.className = "btn";
-        lista.appendChild(a);
-      });
-    })
-    .catch(() => {
-      document.getElementById("titlu").innerText = "Eroare la încărcare";
-    });
-}
-</script>
+          if (!data.length) {
+            document.getElementById("title").innerText = "Nu există linkuri pentru acest cod";
+            return;
+          }
+
+          document.getElementById("title").innerText = "Alege unde vrei să mergi";
+
+          data.forEach(item => {
+            const btn = document.createElement("button");
+            btn.innerText = item.label || "Deschide link";
+            btn.onclick = () => {
+              window.location.href = item.url;
+            };
+            document.getElementById("buttons").appendChild(btn);
+          });
+        })
+        .catch(err => {
+          document.getElementById("loader").style.display = "none";
+          document.getElementById("title").innerText = "Eroare la încărcare";
+          console.error(err);
+        });
+    }
+  </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
