@@ -281,12 +281,31 @@ body.predare .bottom-nav a.active {
 }
 
 /* Linia cu numărul de teritorii */
-.info-line {
-  margin-top: -10px;
-  margin-bottom: 20px;
+/* Text sus cu numărul de teritorii */
+.page-info {
+  position: fixed;
+  top: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
   font-size: 13px;
   color: #64748b;
+  pointer-events: none;
 }
+
+.page-info span {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(148, 163, 184, 0.3);
+}
+
+/* pe predare ușor portocaliu */
+body.predare .page-info span {
+  color: #9a3412;
+  box-shadow: 0 4px 10px rgba(248, 153, 88, 0.35);
+}
+
 
 /* pe predare ușor portocaliu */
 body.predare .info-line {
