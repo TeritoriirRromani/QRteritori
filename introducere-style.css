@@ -301,3 +301,11 @@ body.predare .bottom-nav a {
 body.predare .bottom-nav a.active {
   color: #c05621;
 }
+
+/* aliniază câmpul de dată cu celelalte */
+input[type="date"] {
+  width: 100%;
+  padding-left: 16px;
+  padding-right: 16px; /* ca la select */
+  text-align: left;
+}
