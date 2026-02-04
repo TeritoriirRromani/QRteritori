@@ -10,6 +10,8 @@
   <div class="form-container">
     <h1>Predare teritoriu</h1>
 
+    <p id="info-teritorii" class="info-line"></p>
+
     <div class="form-group">
       <label for="teritoriu">Teritoriu (activ)</label>
       <select id="teritoriu">
@@ -49,7 +51,6 @@
     </a>
   </nav>
 
-
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWzaKBYSvoxLD2fVyfkqok08H-CK5hIFCw2hQcDI-PuLbPFsblq3FljQzPo6lGIjXd/exec';
     
@@ -75,6 +76,9 @@
           opt.textContent = item.teritoriu + ' (' + item.frate + ')';
           sel.appendChild(opt);
         });
+
+        const info = document.getElementById('info-teritorii');
+        info.textContent = 'Teritorii active: ' + data.length;
       }
     };
 
