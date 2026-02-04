@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Predare teritoriu</title>
+  <link rel="stylesheet" href="introducere-style.css">
+</head>
+<body>
+  <div class="form-container">
+    <h1>Predare teritoriu</h1>
+
+    <div class="form-group">
+      <label for="teritoriu">Teritoriu (activ)</label>
+      <select id="teritoriu">
+        <option value="">-- Selectează un teritoriu --</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="frate">Frate care deține</label>
+      <input type="text" id="frate" readonly placeholder="Se umple automat" />
+    </div>
+
+    <div class="form-group">
+      <label for="data">Data predării</label>
+      <input type="date" id="data" />
+    </div>
+
+    <button type="button" onclick="preda()">Predă</button>
+
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvpvw0plV6WBZOVUFIBYujsp4vBu0OcWJcKQk3GATjoRY0IujxKjsUA5QnCI4enpyC/exec';
+    
+    let teritoriiActive = {};
+
+    function incarcaTeritoriiActive() {
+      const script = document.createElement('script');
+      script.src = SCRIPT_URL + '?action=teritoriiActive&callback=populateTeritoriiActive';
+      document.body.appendChild(script);
+    }
+
+    window.populateTeritoriiActive = function(data) {
+      const sel = document.getElementById('teritoriu');
+      sel.innerHTML = '<option value="">-- Selectează un teritoriu --</option>';
+      
+      teritoriiActive = {};
+      
+      data.forEach(item => {
+        teritoriiActive[item.teritoriu] = item.frate;
+        const opt = document.createElement('option');
+        opt.value = item.teritoriu;
+        opt.textContent = item.teritoriu + ' (' + item.frate + ')';
+        sel.appendChild(opt);
+      });
+    };
+
+    document.getElementById('teritoriu').addEventListener('change', function() {
+      const teritoriu = this.value;
+      const frateInput = document.getElementById('frate');
+      
+      if (teritoriu && teritoriiActive[teritoriu]) {
+        frateInput.value = teritoriiActive[teritoriu];
+      } else {
+        frateInput.value = '';
+      }
+    });
+
+    function resetForm() {
+      document.getElementById('teritoriu').value = '';
+      document.getElementById('frate').value = '';
+      document.getElementById('data').value = new Date().toISOString().slice(0, 10);
+    }
+
+    async function preda() {
+      const teritoriu = document.getElementById('teritoriu').value;
+      const data = document.getElementById('data').value;
+
+      if (!teritoriu || !data) {
+        const status = document.getElementById('status');
+        status.textContent = 'Completează toate câmpurile!';
+        status.className = 'error';
+        return;
+      }
+
+      const params = new URLSearchParams();
+      params.append('action', 'preda');
+      params.append('teritoriu', teritoriu);
+      params.append('data', data);
+
+      try {
+        const resp = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: params
+        });
+        const text = await resp.text();
+        const status = document.getElementById('status');
+        status.textContent = text;
+        status.className = 'success';
+        
+        setTimeout(() => {
+          resetForm();
+          incarcaTeritoriiActive();
+          status.textContent = '';
+        }, 2000);
+      } catch (err) {
+        const status = document.getElementById('status');
+        status.textContent = 'Eroare la predare: ' + err;
+        status.className = 'error';
+      }
+    }
+
+    window.addEventListener('load', () => {
+      incarcaTeritoriiActive();
+      resetForm();
+    });
+  </script>
+</body>
+</html>
