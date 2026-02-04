@@ -213,3 +213,56 @@ body.predare #status.error {
   background: #fef2f2;
   color: #b91c1c;
 }
+
+/* BOTTOM NAV – link între introducere și predare */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(148, 163, 184, 0.4);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 10;
+}
+
+.bottom-nav a {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #365f9c;
+  padding: 8px 0;
+}
+
+/* pagină activă */
+.bottom-nav a.active {
+  color: #1d4ed8;
+}
+
+/* variantă portocalie pe pagina de predare */
+body.predare .bottom-nav {
+  background: rgba(255, 247, 237, 0.95);
+  border-top-color: rgba(248, 153, 88, 0.5);
+}
+
+body.predare .bottom-nav a {
+  color: #9a3412;
+}
+
+body.predare .bottom-nav a.active {
+  color: #c05621;
+}
+
+/* pe ecran mic să nu acopere conținutul */
+@media (max-width: 480px) {
+  .form-container {
+    margin-bottom: 80px;
+  }
+}
+
