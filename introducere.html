@@ -10,6 +10,8 @@
   <div class="form-container">
     <h1>Introducere teritoriu</h1>
 
+    <p id="info-teritorii" class="info-line"></p>
+
     <div class="form-group">
       <label for="nume">Nume frate</label>
       <select id="nume">
@@ -46,7 +48,6 @@
     </a>
   </nav>
 
-
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvpvw0plV6WBZOVUFIBYujsp4vBu0OcWJcKQk3GATjoRY0IujxKjsUA5QnCI4enpyC/exec';
     
@@ -82,6 +83,9 @@
         opt.textContent = t;
         sel.appendChild(opt);
       });
+
+      const info = document.getElementById('info-teritorii');
+      info.textContent = 'Teritorii libere: ' + list.length;
     };
 
     function resetForm() {
