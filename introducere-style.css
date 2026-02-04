@@ -296,4 +296,14 @@ body.predare .bottom-nav a.active {
   }
 }
 
+.info-line {
+  margin-top: -10px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: #64748b;
+}
 
+/* pe predare ușor portocaliu */
+body.predare .info-line {
+  color: #9a3412;
+}
