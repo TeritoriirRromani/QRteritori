@@ -50,7 +50,8 @@ label {
   color: #365f9c;
 }
 
-/* INPUT / SELECT */
+/* INPUT / SELECT – comun pentru introducere + predare */
+input[type="text"],
 input[type="date"],
 select {
   width: 100%;
@@ -65,6 +66,7 @@ select {
   cursor: pointer;
 }
 
+input[type="text"]:focus,
 input[type="date"]:focus,
 select:focus {
   outline: none;
@@ -73,6 +75,12 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(95, 131, 194, 0.1);
 }
 
+/* Câmp readonly (fratele la predare) – să nu pară editabil */
+input[readonly] {
+  cursor: default;
+}
+
+/* SELECT – săgeata custom */
 select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23365f9c' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
@@ -81,7 +89,7 @@ select {
   padding-right: 36px;
 }
 
-/* BUTON SALVEAZĂ */
+/* BUTON – identic pe ambele pagini */
 button {
   width: 100%;
   padding: 14px 24px;
@@ -136,6 +144,7 @@ button:active {
     font-size: 24px;
   }
 
+  input[type="text"],
   input[type="date"],
   select {
     padding: 10px 12px;
