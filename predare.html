@@ -44,19 +44,22 @@
     }
 
     window.populateTeritoriiActive = function(data) {
-      const sel = document.getElementById('teritoriu');
-      sel.innerHTML = '<option value="">-- Selectează un teritoriu --</option>';
-      
-      teritoriiActive = {};
-      
-      data.forEach(item => {
-        teritoriiActive[item.teritoriu] = item.frate;
-        const opt = document.createElement('option');
-        opt.value = item.teritoriu;
-        opt.textContent = item.teritoriu + ' (' + item.frate + ')';
-        sel.appendChild(opt);
-      });
-    };
+  const sel = document.getElementById('teritoriu');
+  sel.innerHTML = '<option value="">-- Selectează un teritoriu --</option>';
+  
+  teritoriiActive = {};
+  
+  if (Array.isArray(data)) {
+    data.forEach(item => {
+      teritoriiActive[item.teritoriu] = item.frate;
+      const opt = document.createElement('option');
+      opt.value = item.teritoriu;
+      opt.textContent = item.teritoriu + ' (' + item.frate + ')';
+      sel.appendChild(opt);
+    });
+  }
+};
+
 
     document.getElementById('teritoriu').addEventListener('change', function() {
       const teritoriu = this.value;
