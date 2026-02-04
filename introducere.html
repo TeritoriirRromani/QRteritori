@@ -7,10 +7,11 @@
   <link rel="stylesheet" href="introducere-style.css">
 </head>
 <body>
-  <body>
+  <!-- Badge sus, în bulă, centrat -->
   <div class="page-info">
     <span id="info-teritorii">Teritorii libere: 0</span>
   </div>
+
   <div class="form-container">
     <h1>Introducere teritoriu</h1>
 
@@ -38,7 +39,7 @@
     <p id="status"></p>
   </div>
 
-  <!-- Bara de navigare jos -->
+  <!-- Bara de navigare jos, ca pe Instagram -->
   <nav class="bottom-nav">
     <a href="introducere.html" class="active">
       <img src="icon-introducere.svg" alt="Introducere" class="icon-img">
@@ -50,10 +51,9 @@
     </a>
   </nav>
 
-
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvpvw0plV6WBZOVUFIBYujsp4vBu0OcWJcKQk3GATjoRY0IujxKjsUA5QnCI4enpyC/exec';
-    
+
     function incarcaNume() {
       const script = document.createElement('script');
       script.src = SCRIPT_URL + '?action=nume&callback=populateNume';
@@ -123,7 +123,7 @@
         const status = document.getElementById('status');
         status.textContent = text;
         status.className = 'success';
-        
+
         setTimeout(() => {
           resetForm();
           incarcaTeritoriiLibere();
