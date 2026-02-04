@@ -17,7 +17,6 @@
       </select>
     </div>
 
-    
     <div class="form-group">
       <label for="frate">Frate care deține</label>
       <input type="text" id="frate" readonly placeholder="Se umple automat" />
@@ -34,7 +33,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvpvw0plV6WBZOVUFIBYujsp4vBu0OcWJcKQk3GATjoRY0IujxKjsUA5QnCI4enpyC/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWzaKBYSvoxLD2fVyfkqok08H-CK5hIFCw2hQcDI-PuLbPFsblq3FljQzPo6lGIjXd/exec';
     
     let teritoriiActive = {};
 
@@ -45,22 +44,22 @@
     }
 
     window.populateTeritoriiActive = function(data) {
-  const sel = document.getElementById('teritoriu');
-  sel.innerHTML = '<option value="">-- Selectează un teritoriu --</option>';
-  
-  teritoriiActive = {};
-  
-  if (Array.isArray(data)) {
-    data.forEach(item => {
-      teritoriiActive[item.teritoriu] = item.frate;
-      const opt = document.createElement('option');
-      opt.value = item.teritoriu;
-      opt.textContent = item.teritoriu + ' (' + item.frate + ')';
-      sel.appendChild(opt);
-    });
-  }
-};
-
+      const sel = document.getElementById('teritoriu');
+      sel.innerHTML = '<option value="">-- Selectează un teritoriu --</option>';
+      
+      teritoriiActive = {};
+      
+      if (Array.isArray(data)) {
+        data.forEach(item => {
+          // item = { teritoriu: 'Ortlec 1', frate: 'Abrudan Isabela' }
+          teritoriiActive[item.teritoriu] = item.frate;
+          const opt = document.createElement('option');
+          opt.value = item.teritoriu;
+          opt.textContent = item.teritoriu + ' (' + item.frate + ')';
+          sel.appendChild(opt);
+        });
+      }
+    };
 
     document.getElementById('teritoriu').addEventListener('change', function() {
       const teritoriu = this.value;
