@@ -89,7 +89,7 @@ select {
   padding-right: 36px;
 }
 
-/* BUTON – albastru by default */
+/* BUTON – albastru by default (pentru introducere) */
 button {
   width: 100%;
   padding: 14px 24px;
@@ -152,22 +152,8 @@ button:active {
   }
 }
 
-/* TEMA PORTOCALIE DOAR PENTRU PAGINA PREDARE */
-body.predare h1 {
-  color: #c05621;
-}
+/* === TEMA PORTOCALIE DOAR PENTRU PAGINA PREDARE === */
 
-body.predare button {
-  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
-  box-shadow: 0 8px 18px rgba(234, 88, 12, 0.3);
-}
-
-body.predare button:hover {
-  background: linear-gradient(180deg, #fb923c 0%, #c2410c);
-  box-shadow: 0 10px 22px rgba(192, 65, 12, 0.4);
-}
-
-/* TEMA PORTOCALIE DOAR PENTRU PAGINA PREDARE */
 body.predare {
   background: linear-gradient(180deg, #fff4e6 0%, #ffffff 100%);
   color: #7c2d12;
@@ -227,4 +213,3 @@ body.predare #status.error {
   background: #fef2f2;
   color: #b91c1c;
 }
-
