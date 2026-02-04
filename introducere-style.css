@@ -196,6 +196,52 @@ body.predare #status.error {
   color: #b91c1c;
 }
 
+/* pe ecran mic să nu acopere conținutul */
+@media (max-width: 480px) {
+  .form-container {
+    margin-bottom: 80px;
+  }
+}
+
+/* Text sus cu numărul de teritorii – în bulă centrată */
+.page-info {
+  position: fixed;
+  top: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+.page-info span {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 4px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(148, 163, 184, 0.3);
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* pe predare ușor portocaliu */
+body.predare .page-info span {
+  color: #9a3412;
+  box-shadow: 0 4px 10px rgba(248, 153, 88, 0.35);
+}
+
+/* DOAR DESKTOP – badge puțin mai discret */
+@media (min-width: 769px) {
+  .page-info {
+    top: 24px;
+  }
+
+  .page-info span {
+    font-size: 12px;
+    padding: 3px 10px;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.8);
+  }
+}
+
 /* BOTTOM NAV – bară jos ca pe Instagram, cu iconițe SVG */
 .bottom-nav {
   position: fixed;
@@ -254,50 +300,4 @@ body.predare .bottom-nav a {
 /* link activ pe predare – portocaliu mai puternic */
 body.predare .bottom-nav a.active {
   color: #c05621;
-}
-
-/* pe ecran mic să nu acopere conținutul */
-@media (max-width: 480px) {
-  .form-container {
-    margin-bottom: 80px;
-  }
-}
-
-/* Text sus cu numărul de teritorii – în bulă centrată */
-.page-info {
-  position: fixed;
-  top: 10px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  pointer-events: none;
-}
-
-.page-info span {
-  background: rgba(255, 255, 255, 0.9);
-  padding: 4px 10px;
-  border-radius: 999px;
-  box-shadow: 0 4px 10px rgba(148, 163, 184, 0.3);
-  font-size: 13px;
-  color: #64748b;
-}
-
-/* pe predare ușor portocaliu */
-body.predare .page-info span {
-  color: #9a3412;
-  box-shadow: 0 4px 10px rgba(248, 153, 88, 0.35);
-}
-
-/* DOAR DESKTOP – badge puțin mai discret */
-@media (min-width: 769px) {
-  .page-info {
-    top: 24px;
-  }
-
-  .page-info span {
-    font-size: 12px;
-    padding: 3px 10px;
-    box-shadow: none;
-    background: rgba(255, 255, 255, 0.8);
-  }
 }
