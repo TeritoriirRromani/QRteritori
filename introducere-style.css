@@ -214,23 +214,7 @@ body.predare #status.error {
   color: #b91c1c;
 }
 
-/* BOTTOM NAV – link între introducere și predare */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-top: 1px solid rgba(148, 163, 184, 0.4);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 10;
-}
-
-/* BOTTOM NAV – link între introducere și predare */
+/* BOTTOM NAV – link între introducere și predare cu iconițe */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -296,6 +280,7 @@ body.predare .bottom-nav a.active {
   }
 }
 
+/* Linia cu numărul de teritorii */
 .info-line {
   margin-top: -10px;
   margin-bottom: 20px;
