@@ -3,7 +3,6 @@
   box-sizing: border-box;
 }
 
-
 /* BODY */
 body {
   min-height: 100vh;
@@ -90,7 +89,7 @@ select {
   padding-right: 36px;
 }
 
-/* BUTON – identic pe ambele pagini */
+/* BUTON – albastru by default */
 button {
   width: 100%;
   padding: 14px 24px;
@@ -152,9 +151,10 @@ button:active {
     font-size: 14px;
   }
 }
+
 /* TEMA PORTOCALIE DOAR PENTRU PAGINA PREDARE */
 body.predare h1 {
-  color: #c05621;              /* portocaliu închis pentru titlu */
+  color: #c05621;
 }
 
 body.predare button {
@@ -166,4 +166,3 @@ body.predare button:hover {
   background: linear-gradient(180deg, #fb923c 0%, #c2410c);
   box-shadow: 0 10px 22px rgba(192, 65, 12, 0.4);
 }
-
