@@ -6,11 +6,6 @@
   <title>Predare teritoriu</title>
   <link rel="stylesheet" href="introducere-style.css">
 </head>
-    <nav class="bottom-nav">
-    <a href="introducere.html" class="active">Introducere</a>
-    <a href="predare.html">Predare</a>
-  </nav>
-
 <body class="predare">
   <div class="form-container">
     <h1>Predare teritoriu</h1>
@@ -42,6 +37,12 @@
     <p id="status"></p>
   </div>
 
+  <!-- Bara de navigare jos -->
+  <nav class="bottom-nav">
+    <a href="introducere.html">Introducere</a>
+    <a href="predare.html" class="active">Predare</a>
+  </nav>
+
   <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWzaKBYSvoxLD2fVyfkqok08H-CK5hIFCw2hQcDI-PuLbPFsblq3FljQzPo6lGIjXd/exec';
     
@@ -61,7 +62,6 @@
       
       if (Array.isArray(data)) {
         data.forEach(item => {
-          // item = { teritoriu: 'Ortlec 1', frate: 'Abrudan Isabela' }
           teritoriiActive[item.teritoriu] = item.frate;
           const opt = document.createElement('option');
           opt.value = item.teritoriu;
