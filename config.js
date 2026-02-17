@@ -5,4 +5,4 @@
    Dacă redeployezi scriptul, schimbi DOAR aici.
    ========================================================= */
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwasP3akxPNreDfxkMX0j8f0kTaz6eNirob9w11Z68x6Jt74BgSrLxl5Mfxve8a66b6/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRrgolkz4fUF3j4dVcuVBrv9WcnXWQbhwaJr1HT4wnRaCFHgrr1IG0cMBH7I1KxFg/exec";
