@@ -185,6 +185,19 @@
       </div>
     </div>
 
+    <div class="dash-card">
+      <div class="e-label">Lucrate ultimul an</div>
+      <div class="dash-num" id="d-an">-</div>
+      <div style="font-size:12px;opacity:0.7;" id="d-an-p">-</div>
+    </div>
+    
+    <div class="dash-card">
+      <div class="e-label">Active acum</div>
+      <div class="dash-num" id="d-active-perf">-</div>
+      <div style="font-size:12px;opacity:0.7;" id="d-active-p">-</div>
+    </div>
+
+
     <!-- GRAFIC EVOLUȚIE -->
     <div class="evidenta-item chart-card">
       <div class="e-label">Evoluție (ultimele 30 zile)</div>
@@ -257,6 +270,21 @@
         document.body.appendChild(s);
       });
     }
+
+    function loadPerformance(){
+  return loadJsonp(SCRIPT_URL + '?action=performance&callback=populatePerformance');
+}
+
+window.populatePerformance = function(d){
+  document.getElementById('d-an').textContent = d.lucrateAn ?? 0;
+  document.getElementById('d-an-p').textContent =
+    (d.procentAn ?? 0) + '% din total (' + (d.total ?? 0) + ')';
+
+  document.getElementById('d-active-perf').textContent = d.active ?? 0;
+  document.getElementById('d-active-p').textContent =
+    (d.procentActive ?? 0) + '% din total';
+};
+
 
     // ===============================
     // Dashboard (JSONP)
@@ -447,6 +475,8 @@
         await loadDashboard();
         await loadEvolutie(30);
         await loadEvidenta();
+        await loadPerformance();
+
       } catch (e) {
         setStatus('Eroare la încărcare: ' + e, 'error');
       }
