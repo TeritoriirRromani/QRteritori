@@ -4,17 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Introducere teritoriu</title>
+
+  <!-- Stil comun pentru toate paginile -->
   <link rel="stylesheet" href="introducere-style.css">
 </head>
 
 <body>
+
+  <!-- ======================================================
+       BADGE INFORMATIV (sus)
+       Afișează numărul de teritorii libere
+       ====================================================== -->
   <div class="page-info">
     <span id="info-teritorii">Teritorii libere: 0</span>
   </div>
 
+  <!-- ======================================================
+       CARD PRINCIPAL (formular)
+       ====================================================== -->
   <div class="form-container">
     <h1>Introducere teritoriu</h1>
 
+    <!-- Select frate -->
     <div class="form-group">
       <label for="nume">Nume frate</label>
       <select id="nume">
@@ -22,69 +33,91 @@
       </select>
     </div>
 
+    <!-- Select teritoriu -->
     <div class="form-group">
-      <label for="teritoriu">Territoriu</label>
+      <label for="teritoriu">Teritoriu</label>
       <select id="teritoriu">
         <option value="">-- Selectează un teritoriu --</option>
       </select>
     </div>
 
+    <!-- Data atribuirii -->
     <div class="form-group">
       <label for="data">Data atribuirii</label>
       <input type="date" id="data" />
     </div>
 
+    <!-- Buton trimitere -->
     <button type="button" onclick="trimite()">Salvează</button>
 
+    <!-- Mesaj status -->
     <p id="status"></p>
   </div>
 
+  <!-- ======================================================
+       NAVIGAȚIE JOS
+       ====================================================== -->
   <nav class="bottom-nav">
     <a href="introducere.html" class="active">
-      <img src="icon-introducere.svg" alt="Introducere" class="icon-img">
+      <img src="icon-introducere.svg" class="icon-img">
       <span class="label">Intro</span>
     </a>
+
     <a href="predare.html">
-      <img src="icon-predare.svg" alt="Predare" class="icon-img">
+      <img src="icon-predare.svg" class="icon-img">
       <span class="label">Predă</span>
     </a>
+
     <a href="evidenta.html">
-      <img src="icon-evidenta.svg" alt="Evidență" class="icon-img">
+      <img src="icon-evidenta.svg" class="icon-img">
       <span class="label">Evidență</span>
     </a>
   </nav>
 
-  <!-- URL-ul vine dintr-un singur loc -->
+  <!-- ======================================================
+       ÎNCĂRCĂM CONFIGURAREA GLOBALĂ (URL Script)
+       ====================================================== -->
   <script src="config.js"></script>
 
   <script>
+
+    /* =====================================================
+       FUNCȚIE AJUTĂTOARE – afișează mesaje în pagină
+       ===================================================== */
     function setStatus(text, type) {
       const status = document.getElementById('status');
       status.textContent = text || '';
       status.className = type || '';
     }
 
+    /* =====================================================
+       ÎNCĂRCARE LISTE DIN GOOGLE APPS SCRIPT (JSONP)
+       ===================================================== */
     function loadJsonp(url) {
       return new Promise((resolve, reject) => {
         const s = document.createElement('script');
         s.src = url;
         s.onload = () => { s.remove(); resolve(); };
-        s.onerror = () => { s.remove(); reject(new Error('JSONP load failed')); };
+        s.onerror = () => { s.remove(); reject(); };
         document.body.appendChild(s);
       });
     }
 
+    /* Încarcă lista fraților */
     function incarcaNume() {
       return loadJsonp(SCRIPT_URL + '?action=nume&callback=populateNume');
     }
 
+    /* Încarcă lista teritoriilor libere */
     function incarcaTeritoriiLibere() {
       return loadJsonp(SCRIPT_URL + '?action=teritoriiLibere&callback=populateTeritorii');
     }
 
+    /* Callback populare frați */
     window.populateNume = function(names) {
       const sel = document.getElementById('nume');
       sel.innerHTML = '<option value="">-- Selectează un frate --</option>';
+
       (names || []).forEach(n => {
         const opt = document.createElement('option');
         opt.value = n;
@@ -93,9 +126,11 @@
       });
     };
 
+    /* Callback populare teritorii */
     window.populateTeritorii = function(list) {
       const sel = document.getElementById('teritoriu');
       sel.innerHTML = '<option value="">-- Selectează un teritoriu --</option>';
+
       (list || []).forEach(t => {
         const opt = document.createElement('option');
         opt.value = t;
@@ -104,16 +139,22 @@
       });
 
       document.getElementById('info-teritorii').textContent =
-        'Teritorii libere: ' + ((list || []).length);
+        'Teritorii libere: ' + (list || []).length;
     };
 
+    /* Resetează formularul */
     function resetForm() {
       document.getElementById('nume').value = '';
       document.getElementById('teritoriu').value = '';
-      document.getElementById('data').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('data').value =
+        new Date().toISOString().slice(0, 10);
     }
 
+    /* =====================================================
+       TRIMITERE DATE LA GOOGLE APPS SCRIPT
+       ===================================================== */
     async function trimite() {
+
       const nume = document.getElementById('nume').value;
       const teritoriu = document.getElementById('teritoriu').value;
       const data = document.getElementById('data').value;
@@ -123,20 +164,20 @@
         return;
       }
 
-      setStatus('Se trimite…', '');
-
       const params = new URLSearchParams();
-      // action nu e necesar aici (doPost tratează lipsa ca “introducere”)
       params.append('nume', nume);
       params.append('teritoriu', teritoriu);
       params.append('data', data);
 
       try {
-        const resp = await fetch(SCRIPT_URL, { method: 'POST', body: params });
+        const resp = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: params
+        });
 
-        // doPost returnează JSON (status, mesaj) — îl afișăm frumos
         const json = await resp.json();
-        setStatus(json.mesaj || 'Salvat!', json.status === 'ok' ? 'success' : 'error');
+
+        setStatus(json.mesaj, json.status === 'ok' ? 'success' : 'error');
 
         if (json.status === 'ok') {
           setTimeout(async () => {
@@ -145,20 +186,19 @@
             setStatus('', '');
           }, 1200);
         }
+
       } catch (err) {
-        setStatus('Eroare la trimitere: ' + err, 'error');
+        setStatus('Eroare: ' + err, 'error');
       }
     }
 
+    /* La încărcarea paginii */
     window.addEventListener('load', async () => {
       resetForm();
-      try {
-        await incarcaNume();
-        await incarcaTeritoriiLibere();
-      } catch (e) {
-        setStatus('Eroare la încărcare liste: ' + e, 'error');
-      }
+      await incarcaNume();
+      await incarcaTeritoriiLibere();
     });
+
   </script>
 </body>
 </html>
