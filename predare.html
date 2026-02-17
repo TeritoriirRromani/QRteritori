@@ -4,17 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Predare teritoriu</title>
+
+  <!-- Stil comun pentru toate paginile -->
   <link rel="stylesheet" href="introducere-style.css">
 </head>
 
 <body class="predare">
+
+  <!-- ======================================================
+       BADGE INFORMATIV (sus)
+       Afișează numărul de teritorii active
+       ====================================================== -->
   <div class="page-info">
     <span id="info-teritorii">Teritorii active: 0</span>
   </div>
 
+  <!-- ======================================================
+       CARD PRINCIPAL (formular)
+       ====================================================== -->
   <div class="form-container">
     <h1>Predare teritoriu</h1>
 
+    <!-- Select teritoriu activ (ocupat) -->
     <div class="form-group">
       <label for="teritoriu">Teritoriu (activ)</label>
       <select id="teritoriu">
@@ -22,92 +33,138 @@
       </select>
     </div>
 
+    <!-- Numele fratelui (se completează automat când alegi teritoriu) -->
     <div class="form-group">
       <label for="frate">Frate care deține</label>
       <input type="text" id="frate" readonly placeholder="Se umple automat" />
     </div>
 
+    <!-- Data predării -->
     <div class="form-group">
       <label for="data">Data predării</label>
       <input type="date" id="data" />
     </div>
 
+    <!-- Buton predare -->
     <button type="button" onclick="preda()">Predă</button>
 
+    <!-- Mesaj status -->
     <p id="status"></p>
   </div>
 
+  <!-- ======================================================
+       NAVIGAȚIE JOS
+       ====================================================== -->
   <nav class="bottom-nav">
     <a href="introducere.html">
       <img src="icon-introducere.svg" alt="Introducere" class="icon-img">
       <span class="label">Intro</span>
     </a>
+
     <a href="predare.html" class="active">
       <img src="icon-predare.svg" alt="Predare" class="icon-img">
       <span class="label">Predă</span>
     </a>
+
     <a href="evidenta.html">
       <img src="icon-evidenta.svg" alt="Evidență" class="icon-img">
       <span class="label">Evidență</span>
     </a>
   </nav>
 
+  <!-- ======================================================
+       CONFIG GLOBAL (URL Script)
+       ====================================================== -->
   <script src="config.js"></script>
 
   <script>
+    /* =====================================================
+       Dicționar local: { teritoriu -> frate }
+       Îl umplem când încărcăm lista teritoriilor active
+       ===================================================== */
     let teritoriiActive = {};
 
+    /* =====================================================
+       FUNCȚIE AJUTĂTOARE – afișează mesaje în pagină
+       ===================================================== */
     function setStatus(text, type) {
       const status = document.getElementById('status');
       status.textContent = text || '';
       status.className = type || '';
     }
 
+    /* =====================================================
+       ÎNCĂRCARE DATE DIN GOOGLE APPS SCRIPT (JSONP)
+       Folosim JSONP deoarece GitHub Pages e alt domeniu
+       ===================================================== */
     function loadJsonp(url) {
       return new Promise((resolve, reject) => {
         const s = document.createElement('script');
         s.src = url;
         s.onload = () => { s.remove(); resolve(); };
-        s.onerror = () => { s.remove(); reject(new Error('JSONP load failed')); };
+        s.onerror = () => { s.remove(); reject(); };
         document.body.appendChild(s);
       });
     }
 
+    /* =====================================================
+       Cerem lista teritoriilor active (ocupate) + fratele
+       endpoint: ?action=teritoriiActive
+       ===================================================== */
     function incarcaTeritoriiActive() {
       return loadJsonp(SCRIPT_URL + '?action=teritoriiActive&callback=populateTeritoriiActive');
     }
 
+    /* =====================================================
+       Callback: populăm dropdown + badge sus
+       Fiecare element vine ca:
+       { teritoriu: "...", frate: "..." }
+       ===================================================== */
     window.populateTeritoriiActive = function(data) {
       const sel = document.getElementById('teritoriu');
       sel.innerHTML = '<option value="">-- Selectează un teritoriu --</option>';
 
-      teritoriiActive = {};
+      teritoriiActive = {}; // reset la refresh
       const arr = Array.isArray(data) ? data : [];
 
       arr.forEach(item => {
+        // salvăm în dicționar pentru autocompletare frate
         teritoriiActive[item.teritoriu] = item.frate;
 
+        // adăugăm opțiune în dropdown
         const opt = document.createElement('option');
         opt.value = item.teritoriu;
         opt.textContent = item.teritoriu + ' (' + item.frate + ')';
         sel.appendChild(opt);
       });
 
+      // actualizăm badge-ul sus
       document.getElementById('info-teritorii').textContent =
         'Teritorii active: ' + arr.length;
     };
 
+    /* =====================================================
+       Când schimbăm teritoriul selectat -> completăm fratele
+       ===================================================== */
     document.getElementById('teritoriu').addEventListener('change', function() {
       const teritoriu = this.value;
-      document.getElementById('frate').value = teritoriu ? (teritoriiActive[teritoriu] || '') : '';
+      document.getElementById('frate').value =
+        teritoriu ? (teritoriiActive[teritoriu] || '') : '';
     });
 
+    /* =====================================================
+       Reset formular (pune data la azi)
+       ===================================================== */
     function resetForm() {
       document.getElementById('teritoriu').value = '';
       document.getElementById('frate').value = '';
       document.getElementById('data').value = new Date().toISOString().slice(0, 10);
     }
 
+    /* =====================================================
+       TRIMITERE PREDĂRE LA GOOGLE APPS SCRIPT
+       doPost: action=preda
+       ===================================================== */
     async function preda() {
       const teritoriu = document.getElementById('teritoriu').value;
       const data = document.getElementById('data').value;
@@ -125,11 +182,16 @@
       params.append('data', data);
 
       try {
-        const resp = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const json = await resp.json();
+        const resp = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: params
+        });
 
+        // doPost returnează JSON (status, mesaj)
+        const json = await resp.json();
         setStatus(json.mesaj || 'Predat!', json.status === 'ok' ? 'success' : 'error');
 
+        // dacă e ok, reset + refresh listă
         if (json.status === 'ok') {
           setTimeout(async () => {
             resetForm();
@@ -142,13 +204,14 @@
       }
     }
 
+    /* =====================================================
+       La încărcarea paginii:
+       - setăm data
+       - încărcăm lista teritoriilor active
+       ===================================================== */
     window.addEventListener('load', async () => {
       resetForm();
-      try {
-        await incarcaTeritoriiActive();
-      } catch (e) {
-        setStatus('Eroare la încărcare: ' + e, 'error');
-      }
+      await incarcaTeritoriiActive();
     });
   </script>
 </body>
