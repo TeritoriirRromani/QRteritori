@@ -5,13 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evidență teritorii</title>
 
-  <!-- Stil comun pentru toate paginile -->
+  <!-- Stil comun pentru toate paginile (Intro/Predă/Evidență) -->
   <link rel="stylesheet" href="introducere-style.css">
 
-  <!-- Chart.js pentru grafic (CDN) -->
+  <!-- Chart.js (CDN) pentru graficul de evoluție + gauge-urile circulare -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
+    /* ===============================
+       LISTA EVIDENȚĂ
+       =============================== */
     .evidenta-list {
       display: flex;
       flex-direction: column;
@@ -30,11 +33,13 @@
       transition: 0.3s ease;
     }
 
+    /* Mică animație de apariție pentru carduri */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Layout 3 coloane (desktop) pentru fiecare card din listă */
     .evidenta-row {
       display: grid;
       grid-template-columns: 1.4fr 1fr 1fr;
@@ -54,6 +59,9 @@
       word-break: break-word;
     }
 
+    /* ===============================
+       BADGE (URGENT / ATENȚIE / OK)
+       =============================== */
     .badge {
       margin-left: 6px;
       padding: 4px 8px;
@@ -65,6 +73,9 @@
     .badge-warning { background:#fff3cd; color:#f9a825; }
     .badge-ok { background:#e6f4ea; color:#1e8e3e; }
 
+    /* ===============================
+       PROGRESS BAR
+       =============================== */
     .progress-container {
       margin-top: 10px;
       height: 6px;
@@ -74,10 +85,12 @@
     }
     .progress-bar { height: 100%; transition: width 0.6s ease; }
 
-    /* Dashboard */
+    /* ===============================
+       DASHBOARD KPI (sus)
+       =============================== */
     .dash-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, 1fr); /* 6 carduri => 2 rânduri x 3 */
       gap: 10px;
       margin: 10px 0 12px 0;
     }
@@ -89,6 +102,7 @@
       padding: 12px;
       text-align: center;
     }
+
     .dash-num {
       font-size: 18px;
       font-weight: 800;
@@ -98,7 +112,33 @@
     .dash-num.warning { color: #f9a825; }
     .dash-num.ok { color: #1e8e3e; }
 
-    /* Buton predă subtil */
+    /* ===============================
+       GAUGE (rotită) – container + text centrat
+       =============================== */
+    .gauge-wrapper {
+      position: relative;
+      width: 100%;
+      height: 120px;
+      margin-top: 6px;
+    }
+
+    .gauge-wrapper canvas {
+      width: 100% !important;
+      height: 120px !important;
+    }
+
+    .gauge-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    /* ===============================
+       BUTON "PREDĂ" (subtil)
+       =============================== */
     .btn-preda {
       margin-top: 10px;
       padding: 5px 12px;
@@ -119,16 +159,19 @@
     }
     .btn-preda.urgent:hover { background: #d93025; color: white; }
 
+    /* Animație la predare: cardul dispare */
     .fade-out {
       opacity: 0;
       transform: translateY(-10px);
       transition: 0.3s ease;
     }
 
-    /* Toast */
+    /* ===============================
+       TOAST (mesaj mic jos)
+       =============================== */
     .toast {
       position: fixed;
-      bottom: 80px;
+      bottom: 80px; /* deasupra nav-ului */
       left: 50%;
       transform: translateX(-50%);
       background: #323232;
@@ -142,14 +185,15 @@
     }
     .toast.show { opacity: 1; }
 
-    /* grafic container */
-    .chart-card canvas {
-      margin-top: 10px;
-    }
+    /* Cardul cu graficul de evoluție */
+    .chart-card canvas { margin-top: 10px; }
 
+    /* Responsiv: pe ecrane mai mici KPI-urile devin 2 pe rând */
     @media (max-width: 700px) {
       .dash-grid { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* Responsiv: pe mobil cardurile listă devin o coloană */
     @media (max-width: 520px) {
       .evidenta-row { grid-template-columns: 1fr; }
     }
@@ -157,8 +201,7 @@
 </head>
 
 <body>
-
-  <!-- Badge sus -->
+  <!-- Badge sus (ca în Intro/Predă) -->
   <div class="page-info">
     <span id="info-teritorii">Teritorii active: 0</span>
   </div>
@@ -166,48 +209,62 @@
   <div class="form-container">
     <h1>Evidență teritorii</h1>
 
-    <!-- DASHBOARD -->
+    <!-- ===============================
+         DASHBOARD KPI
+         - primele 4: din /action=dashboard (Evidenta)
+         - ultimele 2: gauge-uri din /action=performance (Teritorii)
+         =============================== -->
     <div class="dash-grid">
       <div class="dash-card">
         <div class="e-label">Active</div>
         <div class="dash-num" id="d-active">-</div>
       </div>
-    
+
       <div class="dash-card">
         <div class="e-label">Urgent (≤14)</div>
         <div class="dash-num urgent" id="d-urgent">-</div>
       </div>
-    
+
       <div class="dash-card">
         <div class="e-label">Atenție (≤30)</div>
         <div class="dash-num warning" id="d-atentie">-</div>
       </div>
-    
+
       <div class="dash-card">
         <div class="e-label">OK</div>
         <div class="dash-num ok" id="d-ok">-</div>
       </div>
-    
+
       <div class="dash-card">
-  <div class="e-label">Lucrate ultimul an</div>
-  <canvas id="gaugeAn" height="120"></canvas>
-</div>
+        <div class="e-label">Lucrate ultimul an</div>
+        <div class="gauge-wrapper">
+          <canvas id="gaugeAn"></canvas>
+          <div class="gauge-text" id="gaugeAnText">0%</div>
+        </div>
+      </div>
 
-<div class="dash-card">
-  <div class="e-label">Active acum</div>
-  <canvas id="gaugeActive" height="120"></canvas>
-</div>
-
-      
+      <div class="dash-card">
+        <div class="e-label">Active acum</div>
+        <div class="gauge-wrapper">
+          <canvas id="gaugeActive"></canvas>
+          <div class="gauge-text" id="gaugeActiveText">0%</div>
+        </div>
+      </div>
     </div>
 
-    <!-- GRAFIC EVOLUȚIE -->
+    <!-- ===============================
+         GRAFIC EVOLUȚIE (ultimele 30 zile)
+         date din /action=evolutie
+         =============================== -->
     <div class="evidenta-item chart-card">
       <div class="e-label">Evoluție (ultimele 30 zile)</div>
       <canvas id="chartEvo" height="120"></canvas>
     </div>
 
-    <!-- LISTĂ -->
+    <!-- ===============================
+         LISTA EVIDENȚĂ (active acum)
+         date din /action=evidenta
+         =============================== -->
     <div class="evidenta-list" id="evidentaList">
       <div class="evidenta-item">Se încarcă…</div>
     </div>
@@ -216,32 +273,34 @@
     <p id="status"></p>
   </div>
 
-  <!-- Nav jos -->
+  <!-- Nav jos (ca la celelalte pagini) -->
   <nav class="bottom-nav">
     <a href="introducere.html">
-      <img src="icon-introducere.svg" class="icon-img">
+      <img src="icon-introducere.svg" class="icon-img" alt="Introducere">
       <span class="label">Intro</span>
     </a>
     <a href="predare.html">
-      <img src="icon-predare.svg" class="icon-img">
+      <img src="icon-predare.svg" class="icon-img" alt="Predare">
       <span class="label">Predă</span>
     </a>
     <a href="evidenta.html" class="active">
-      <img src="icon-evidenta.svg" class="icon-img">
+      <img src="icon-evidenta.svg" class="icon-img" alt="Evidență">
       <span class="label">Evidență</span>
     </a>
   </nav>
 
-  <!-- Toast -->
+  <!-- Toast (mesaj mic) -->
   <div id="toast" class="toast"></div>
 
-  <!-- Script config -->
+  <!-- config.js trebuie să definească: const SCRIPT_URL = "https://script.google.com/macros/s/.../exec"; -->
   <script src="config.js"></script>
 
   <script>
-    // ===============================
-    // Helpers
-    // ===============================
+    /* =========================================================
+       HELPERS
+       ========================================================= */
+
+    // Escape text pentru siguranță în HTML (evităm caractere problematice)
     function esc(s){
       return String(s ?? '')
         .replaceAll('&','&amp;')
@@ -251,12 +310,14 @@
         .replaceAll("'","&#039;");
     }
 
+    // Afișează un status text (poți folosi clase CSS deja existente: 'error', 'success')
     function setStatus(text, type){
       const el = document.getElementById('status');
       el.textContent = text || '';
       el.className = type || '';
     }
 
+    // Toast discret jos
     function showToast(msg){
       const t = document.getElementById('toast');
       t.textContent = msg;
@@ -264,106 +325,110 @@
       setTimeout(()=>t.classList.remove('show'), 3500);
     }
 
+    // Loader JSONP (folosim JSONP pentru GitHub Pages, ca să evităm CORS)
     function loadJsonp(url){
       return new Promise((resolve,reject)=>{
         const s=document.createElement('script');
         s.src=url;
-        s.onload=()=>{s.remove(); resolve();};
-        s.onerror=()=>{s.remove(); reject(new Error('JSONP load failed'));};
+        s.onload=()=>{ s.remove(); resolve(); };
+        s.onerror=()=>{ s.remove(); reject(new Error('JSONP load failed')); };
         document.body.appendChild(s);
       });
     }
 
-    function loadPerformance(){
-  return loadJsonp(SCRIPT_URL + '?action=performance&callback=populatePerformance');
-}
-
-window.populatePerformance = function(d){
-
-  const procentAn = d.procentAn ?? 0;
-  const procentActive = d.procentActive ?? 0;
-
-  const ctxAn = document.getElementById('gaugeAn').getContext('2d');
-  const ctxActive = document.getElementById('gaugeActive').getContext('2d');
-
-  if (gaugeAnChart) gaugeAnChart.destroy();
-  if (gaugeActiveChart) gaugeActiveChart.destroy();
-
-  let colorAn = '#1e8e3e';
-  if (procentAn < 40) colorAn = '#d93025';
-  else if (procentAn < 70) colorAn = '#f9a825';
-
-  let colorActive = '#1e8e3e';
-  if (procentActive < 40) colorActive = '#d93025';
-  else if (procentActive < 70) colorActive = '#f9a825';
-
-  gaugeAnChart = createGauge(ctxAn, procentAn, colorAn);
-  gaugeActiveChart = createGauge(ctxActive, procentActive, colorActive);
-
-  // scriem procent în centru manual
-  document.getElementById('gaugeAn').parentElement.insertAdjacentHTML(
-    'beforeend',
-    `<div style="margin-top:-90px;font-size:18px;font-weight:800;">${procentAn}%</div>`
-  );
-
-  document.getElementById('gaugeActive').parentElement.insertAdjacentHTML(
-    'beforeend',
-    `<div style="margin-top:-90px;font-size:18px;font-weight:800;">${procentActive}%</div>`
-  );
-};
-
-
-    // ===============================
-    // Dashboard (JSONP)
-    // ===============================
+    /* =========================================================
+       DASHBOARD (action=dashboard)
+       ========================================================= */
     function loadDashboard(){
       return loadJsonp(SCRIPT_URL + '?action=dashboard&callback=populateDashboard');
     }
 
+    // Callback pentru JSONP: primește { active, urgent, atentie, ok }
     window.populateDashboard = function(d){
       document.getElementById('d-active').textContent = d?.active ?? 0;
       document.getElementById('d-urgent').textContent = d?.urgent ?? 0;
       document.getElementById('d-atentie').textContent = d?.atentie ?? 0;
       document.getElementById('d-ok').textContent = d?.ok ?? 0;
+
+      // (opțional) poți actualiza badge-ul sus cu active
+      document.getElementById('info-teritorii').textContent = 'Teritorii active: ' + (d?.active ?? 0);
     };
 
-    // ===============================
-    // Evoluție (Chart.js) (JSONP)
-    // ===============================
-    let evoChart = null;
+    /* =========================================================
+       PERFORMANCE (action=performance) – gauge rotită
+       ========================================================= */
+    function loadPerformance(){
+      return loadJsonp(SCRIPT_URL + '?action=performance&callback=populatePerformance');
+    }
 
     let gaugeAnChart = null;
-let gaugeActiveChart = null;
+    let gaugeActiveChart = null;
 
-function createGauge(ctx, procent, color) {
-
-  return new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      datasets: [{
-        data: [procent, 100 - procent],
-        backgroundColor: [color, '#e0e0e0'],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      cutout: '70%',
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: false }
-      }
+    // Creează un gauge circular (doughnut) cu procent + restul până la 100
+    function createGauge(ctx, procent, color) {
+      return new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [procent, 100 - procent],
+            backgroundColor: [color, '#e0e0e0'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+          }
+        }
+      });
     }
-  });
-}
 
+    // Callback JSONP pentru performance:
+    // { total, lucrateAn, active, procentAn, procentActive }
+    window.populatePerformance = function(d){
+      const procentAn = Number(d?.procentAn ?? 0);
+      const procentActive = Number(d?.procentActive ?? 0);
+
+      const ctxAn = document.getElementById('gaugeAn').getContext('2d');
+      const ctxActive = document.getElementById('gaugeActive').getContext('2d');
+
+      // Curățăm graficele vechi ca să nu se suprapună
+      if (gaugeAnChart) gaugeAnChart.destroy();
+      if (gaugeActiveChart) gaugeActiveChart.destroy();
+
+      // Colorare în funcție de performanță (sub 40 roșu, 40-70 galben, peste 70 verde)
+      let colorAn = '#1e8e3e';
+      if (procentAn < 40) colorAn = '#d93025';
+      else if (procentAn < 70) colorAn = '#f9a825';
+
+      let colorActive = '#1e8e3e';
+      if (procentActive < 40) colorActive = '#d93025';
+      else if (procentActive < 70) colorActive = '#f9a825';
+
+      gaugeAnChart = createGauge(ctxAn, procentAn, colorAn);
+      gaugeActiveChart = createGauge(ctxActive, procentActive, colorActive);
+
+      // Textul din centru (nu se dublează, doar se actualizează)
+      document.getElementById('gaugeAnText').textContent = procentAn + '%';
+      document.getElementById('gaugeActiveText').textContent = procentActive + '%';
+    };
+
+    /* =========================================================
+       EVOLUȚIE (action=evolutie) – grafic line
+       ========================================================= */
+    let evoChart = null;
 
     function loadEvolutie(days = 30){
       return loadJsonp(SCRIPT_URL + `?action=evolutie&days=${days}&callback=populateEvolutie`);
     }
 
+    // Callback JSONP: array de { date: "dd.MM", active, urgent, atentie, ok }
     window.populateEvolutie = function(rows){
       const arr = Array.isArray(rows) ? rows : [];
-
       const labels = arr.map(r => r.date);
       const active = arr.map(r => r.active);
       const urgent = arr.map(r => r.urgent);
@@ -383,33 +448,28 @@ function createGauge(ctx, procent, color) {
         },
         options: {
           responsive: true,
-          plugins: {
-            legend: { display: true }
-          },
-          scales: {
-            y: { beginAtZero: true }
-          }
+          plugins: { legend: { display: true } },
+          scales: { y: { beginAtZero: true } }
         }
       });
     };
 
-    // ===============================
-    // Evidență (JSONP)
-    // ===============================
+    /* =========================================================
+       EVIDENȚĂ (action=evidenta) – listă + predare directă
+       ========================================================= */
     function loadEvidenta(){
       const list = document.getElementById('evidentaList');
       list.innerHTML = `<div class="evidenta-item">Se încarcă…</div>`;
       return loadJsonp(SCRIPT_URL + '?action=evidenta&callback=populateEvidenta');
     }
 
+    // Callback JSONP: array de { nume, teritoriu, data, zileRamase }
     window.populateEvidenta = function(data){
       const list = document.getElementById('evidentaList');
-      const info = document.getElementById('info-teritorii');
 
       let arr = Array.isArray(data) ? data : [];
+      // Sortare: cele mai urgente sus (zile rămase asc)
       arr.sort((a,b) => (a.zileRamase ?? 0) - (b.zileRamase ?? 0));
-
-      info.textContent = 'Teritorii active: ' + arr.length;
 
       if (!arr.length) {
         list.innerHTML = `<div class="evidenta-item">Nu există teritorii active.</div>`;
@@ -423,9 +483,11 @@ function createGauge(ctx, procent, color) {
         const zile = Number(row.zileRamase) || 0;
         const luni = Math.floor(zile / 30);
 
-        const total = 120; // perioada standard
+        // Pentru progress-bar folosim o perioadă standard (4 luni = 120 zile)
+        const total = 120;
         const procent = Math.min((zile / total) * 100, 100);
 
+        // Status (culori + badge + buton)
         let badgeClass="badge-ok", badgeText="OK";
         let barColor="#1e8e3e", textColor="#1e8e3e", btnClass="";
 
@@ -449,6 +511,7 @@ function createGauge(ctx, procent, color) {
                 ${esc(row.nume)}
                 <span class="badge ${badgeClass}">${badgeText}</span>
               </div>
+
               <div class="e-label" style="margin-top:6px;">Data atribuirii</div>
               <div class="e-value" style="font-weight:600; opacity:0.9;">${esc(row.data)}</div>
             </div>
@@ -484,14 +547,13 @@ function createGauge(ctx, procent, color) {
       });
     };
 
-    // ===============================
-    // Predare directă din evidență
-    // ===============================
+    // Predare directă (POST către Apps Script)
     async function predaDirect(teritoriu){
       try {
         const input = document.getElementById('date-' + teritoriu);
         const data = input?.value || new Date().toISOString().slice(0,10);
 
+        // Animație: cardul dispare
         const card = document.getElementById('card-' + teritoriu);
         if (card) card.classList.add('fade-out');
 
@@ -505,7 +567,7 @@ function createGauge(ctx, procent, color) {
 
         if (json.status === 'ok') {
           showToast('Teritoriu predat ✔');
-          // refresh după o mică pauză (să se vadă animația)
+          // Refresh complet după o mică pauză (să se vadă animația)
           setTimeout(()=>refreshAll(), 450);
         } else {
           showToast('Eroare: ' + (json.mesaj || ''));
@@ -518,14 +580,17 @@ function createGauge(ctx, procent, color) {
       }
     }
 
-    // ===============================
-    // Refresh complet (dashboard + grafic + listă)
-    // ===============================
+    /* =========================================================
+       REFRESH COMPLET
+       ========================================================= */
     async function refreshAll(){
       setStatus('', '');
       try {
+        // KPI-uri
         await loadDashboard();
         await loadPerformance();
+
+        // Grafic + listă
         await loadEvolutie(30);
         await loadEvidenta();
 
@@ -534,6 +599,7 @@ function createGauge(ctx, procent, color) {
       }
     }
 
+    // La încărcarea paginii, încărcăm tot
     window.addEventListener('load', refreshAll);
   </script>
 </body>
