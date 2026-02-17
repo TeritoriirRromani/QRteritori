@@ -1,9 +1,5 @@
 const AS_URL_BASE = "https://script.google.com/macros/s/AKfycbzyUrr8MvpdmNwQxPwBxvjG0A8olKI7UiWLXMYXYgfMRMkz9so2w4uc3Bc8QzdovDky/exec";
 
-// ===== CONFIG GLOBAL =====
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJoRjlNGMAx0_WbHD19o2_dyFiH1fsyqfs8r8shLkrNMc-AP-KmMDuTp449gp1fe2_/exec";
-
-
 const verses = [
   "„Du-te la furnică, leneșule. Uită-te la căile ei și fii înțelept.” — Proverbele 6:6",
   "„Creația fizică face vizibile calitățile invizibile ale lui Dumnezeu.” — Romani 1:20",
