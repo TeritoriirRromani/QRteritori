@@ -316,12 +316,49 @@ if (!k) {
       // Dacă sunt mai multe linkuri => afișăm butoane (ca înainte)
       if (buttonsEl) buttonsEl.innerHTML = "";
 
-      data.forEach(item => {
-        const btn = document.createElement("button");
-        btn.innerText = item.label || "Deschide link";
-        btn.onclick = () => window.location.href = item.url;
-        if (buttonsEl) buttonsEl.appendChild(btn);
-      });
+      // =====================================================
+// BUTOANE CU ZILE RĂMASE (culoare + text)
+// =====================================================
+data.forEach(item => {
+  const zile = Number(item.zileRamase) || 0;
+  const luni = Math.floor(Math.max(zile, 0) / 30);
+
+  // Textul de pe buton
+  // Exemplu: "T12 — 18 zile (0 luni)"
+  let textZile = `${zile} zile (${luni} luni)`;
+
+  // Culoare în funcție de urgență
+  // - Expirat / Urgent: roșu
+  // - Atenție: galben
+  // - OK: verde/albastru (depinde cum e stilul tău)
+  let accent = "#1e8e3e"; // ok
+  if (zile <= 0) accent = "#d93025";       // expirat
+  else if (zile < 7) accent = "#d93025";   // urgent
+  else if (zile <= 30) accent = "#f9a825"; // atenție
+
+  // Butonul
+  const btn = document.createElement("button");
+
+  // Dacă vrei să păstrezi CSS-ul tău existent de butoane:
+  // - folosim innerHTML ca să putem avea două rânduri în buton
+  btn.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+      <div style="font-weight:800;">${item.label || "Deschide link"}</div>
+      <div style="font-size:12px; font-weight:800; color:${accent}; opacity:0.95;">
+        ${textZile}
+      </div>
+    </div>
+  `;
+
+  // Accent subtil pe margine ca să se vadă urgența
+  btn.style.borderLeft = `6px solid ${accent}`;
+
+  // Click => mergi la link
+  btn.onclick = () => window.location.href = item.url;
+
+  buttonsEl.appendChild(btn);
+});
+
     })
     .catch(err => {
       if (loaderEl) loaderEl.style.display = "none";
