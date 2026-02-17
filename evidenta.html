@@ -77,10 +77,11 @@
     /* Dashboard */
     .dash-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 10px;
       margin: 10px 0 12px 0;
     }
+
     .dash-card {
       border: 2px solid #d4dff0;
       background: #f8fafd;
@@ -475,9 +476,9 @@ window.populatePerformance = function(d){
       setStatus('', '');
       try {
         await loadDashboard();
+        await loadPerformance();
         await loadEvolutie(30);
         await loadEvidenta();
-        await loadPerformance();
 
       } catch (e) {
         setStatus('Eroare la încărcare: ' + e, 'error');
