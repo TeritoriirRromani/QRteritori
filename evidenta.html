@@ -1,112 +1,171 @@
 <!DOCTYPE html>
-<html>
+<html lang="ro">
 <head>
-<meta charset="UTF-8">
-<title>Evidență teritorii</title>
-<style>
-body {
-  font-family: Arial;
-  background:#eef1f6;
-  margin:0;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evidență teritorii</title>
 
-.container {
-  max-width:900px;
-  margin:40px auto 100px;
-  background:white;
-  padding:30px;
-  border-radius:12px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.1);
-}
+  <!-- EXACT ca la Introducere/Predare -->
+  <link rel="stylesheet" href="introducere-style.css">
 
-h2 {
-  text-align:center;
-  margin-bottom:20px;
-}
+  <!-- mic styling doar pentru listă (nu strică restul stilului) -->
+  <style>
+    .evidenta-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
 
-table {
-  width:100%;
-  border-collapse:collapse;
-}
+    .evidenta-item {
+      border: 2px solid #d4dff0;
+      background: #f8fafd;
+      border-radius: 14px;
+      padding: 12px 14px;
+      text-align: left;
+    }
 
-th, td {
-  padding:10px;
-  border-bottom:1px solid #ddd;
-  text-align:left;
-}
+    .evidenta-row {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 0.9fr;
+      gap: 10px;
+      align-items: start;
+    }
 
-th {
-  background:#4e6ea7;
-  color:white;
-}
+    .e-label {
+      font-size: 12px;
+      opacity: 0.75;
+      margin-bottom: 4px;
+    }
 
-.bottom-nav {
-  position:fixed;
-  bottom:0;
-  width:100%;
-  background:white;
-  display:flex;
-  justify-content:space-around;
-  padding:10px 0;
-  box-shadow:0 -5px 20px rgba(0,0,0,0.1);
-}
+    .e-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #365f9c;
+      word-break: break-word;
+    }
 
-.bottom-nav a {
-  text-decoration:none;
-  color:#4e6ea7;
-  font-weight:bold;
-}
-</style>
+    .evidenta-empty {
+      padding: 14px;
+      border-radius: 12px;
+      background: #f8fafd;
+      border: 2px dashed #d4dff0;
+      font-size: 14px;
+      opacity: 0.85;
+    }
+
+    /* pe mobil: rânduri sub rânduri */
+    @media (max-width: 520px) {
+      .evidenta-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
+
 <body>
+  <!-- Badge sus -->
+  <div class="page-info">
+    <span id="info-teritorii">Teritorii active: 0</span>
+  </div>
 
-<div class="container">
-  <h2>Evidență activă</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Nume</th>
-        <th>Teritoriu</th>
-        <th>Data atribuirii</th>
-      </tr>
-    </thead>
-    <tbody id="evidentaBody">
-    </tbody>
-  </table>
-</div>
+  <!-- Card identic cu celelalte pagini -->
+  <div class="form-container">
+    <h1>Evidență teritorii</h1>
 
-<div class="bottom-nav">
-  <a href="introducere.html">Intro</a>
-  <a href="predare.html">Predă</a>
-  <a href="evidenta.html">Evidență</a>
-</div>
+    <div class="evidenta-list" id="evidentaList">
+      <div class="evidenta-empty">Se încarcă…</div>
+    </div>
 
-<script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbwJoRjlNGMAx0_WbHD19o2_dyFiH1fsyqfs8r8shLkrNMc-AP-KmMDuTp449gp1fe2_/exec";
+    <button type="button" onclick="incarcaEvidenta()">Reîncarcă</button>
+    <p id="status"></p>
+  </div>
 
-function loadEvidenta() {
-  fetch(scriptURL + "?action=evidenta")
-    .then(res => res.json())
-    .then(data => {
-      const tbody = document.getElementById("evidentaBody");
-      tbody.innerHTML = "";
+  <!-- Bara jos identică -->
+  <nav class="bottom-nav">
+    <a href="introducere.html">
+      <img src="icon-introducere.svg" alt="Introducere" class="icon-img">
+      <span class="label">Intro</span>
+    </a>
 
-      data.forEach(row => {
-        const tr = document.createElement("tr");
+    <a href="predare.html">
+      <img src="icon-predare.svg" alt="Predare" class="icon-img">
+      <span class="label">Predă</span>
+    </a>
 
-        tr.innerHTML = `
-          <td>${row.nume}</td>
-          <td>${row.teritoriu}</td>
-          <td>${row.data}</td>
-        `;
+    <a href="evidenta.html" class="active">
+      <img src="icon-evidenta.svg" alt="Evidență" class="icon-img">
+      <span class="label">Evidență</span>
+    </a>
+  </nav>
 
-        tbody.appendChild(tr);
-      });
+  <script>
+    // Folosește ACELAȘI URL ca în introducere.html / predare.html
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJoRjlNGMAx0_WbHD19o2_dyFiH1fsyqfs8r8shLkrNMc-AP-KmMDuTp449gp1fe2_/exec';
+
+    function esc(s) {
+      return String(s ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    async function incarcaEvidenta() {
+      const status = document.getElementById('status');
+      const list = document.getElementById('evidentaList');
+      const info = document.getElementById('info-teritorii');
+
+      status.textContent = '';
+      status.className = '';
+      list.innerHTML = `<div class="evidenta-empty">Se încarcă…</div>`;
+
+      try {
+        const resp = await fetch(SCRIPT_URL + '?action=evidenta');
+        const data = await resp.json();
+
+        info.textContent = 'Teritorii active: ' + (Array.isArray(data) ? data.length : 0);
+
+        if (!Array.isArray(data) || data.length === 0) {
+          list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
+          return;
+        }
+
+        list.innerHTML = '';
+        data.forEach(row => {
+          const item = document.createElement('div');
+          item.className = 'evidenta-item';
+          item.innerHTML = `
+            <div class="evidenta-row">
+              <div>
+                <div class="e-label">Nume</div>
+                <div class="e-value">${esc(row.nume)}</div>
+              </div>
+              <div>
+                <div class="e-label">Teritoriu</div>
+                <div class="e-value">${esc(row.teritoriu)}</div>
+              </div>
+              <div>
+                <div class="e-label">Data atribuirii</div>
+                <div class="e-value">${esc(row.data)}</div>
+              </div>
+            </div>
+          `;
+          list.appendChild(item);
+        });
+
+      } catch (err) {
+        list.innerHTML = `<div class="evidenta-empty">Eroare la încărcare.</div>`;
+        status.textContent = 'Eroare: ' + err;
+        status.className = 'error';
+      }
+    }
+
+    window.addEventListener('load', () => {
+      incarcaEvidenta();
     });
-}
-
-loadEvidenta();
-</script>
-
+  </script>
 </body>
 </html>
