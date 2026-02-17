@@ -8,9 +8,7 @@
   <!-- Stil comun pentru toate paginile -->
   <link rel="stylesheet" href="introducere-style.css">
 
-  <!-- ======================================================
-       Stiluri doar pentru lista Evidență (restul vine din CSS-ul comun)
-       ====================================================== -->
+  <!-- Stiluri doar pentru lista Evidență (restul vine din CSS-ul comun) -->
   <style>
     .evidenta-list {
       display: flex;
@@ -66,18 +64,12 @@
 </head>
 
 <body>
-
-  <!-- ======================================================
-       BADGE INFORMATIV (sus)
-       Afișează numărul de teritorii active (din Evidență)
-       ====================================================== -->
+  <!-- Badge informativ (sus) -->
   <div class="page-info">
     <span id="info-teritorii">Teritorii active: 0</span>
   </div>
 
-  <!-- ======================================================
-       CARD PRINCIPAL
-       ====================================================== -->
+  <!-- Card principal -->
   <div class="form-container">
     <h1>Evidență teritorii</h1>
 
@@ -93,9 +85,7 @@
     <p id="status"></p>
   </div>
 
-  <!-- ======================================================
-       NAVIGAȚIE JOS
-       ====================================================== -->
+  <!-- Navigație jos -->
   <nav class="bottom-nav">
     <a href="introducere.html">
       <img src="icon-introducere.svg" alt="Introducere" class="icon-img">
@@ -113,7 +103,7 @@
     </a>
   </nav>
 
-  <!-- Config global cu SCRIPT_URL -->
+  <!-- Config global cu SCRIPT_URL (o singură dată) -->
   <script src="config.js"></script>
 
   <script>
@@ -127,7 +117,7 @@
     }
 
     /* =====================================================
-       Escape text ca să evităm probleme dacă apar caractere speciale
+       Escape text (evită probleme cu caractere speciale)
        ===================================================== */
     function esc(s) {
       return String(s ?? '')
@@ -139,95 +129,81 @@
     }
 
     /* =====================================================
-       ÎNCĂRCARE EVIDENȚĂ DIN APPS SCRIPT
-       endpoint: ?action=evidenta
-       returnează array cu:
-       { nume, teritoriu, data }
+       JSONP loader (ca în Introducere/Predare)
        ===================================================== */
-<script src="config.js"></script>
-<script>
-  function setStatus(text, type) {
-    const status = document.getElementById('status');
-    status.textContent = text || '';
-    status.className = type || '';
-  }
-
-  function esc(s) {
-    return String(s ?? '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
-
-  // JSONP loader (ca în celelalte pagini)
-  function loadJsonp(url) {
-    return new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = url;
-      s.onload = () => { s.remove(); resolve(); };
-      s.onerror = () => { s.remove(); reject(new Error('JSONP load failed')); };
-      document.body.appendChild(s);
-    });
-  }
-
-  // Callback-ul pe care îl va apela Apps Script
-  window.populateEvidenta = function(data) {
-    const list = document.getElementById('evidentaList');
-    const info = document.getElementById('info-teritorii');
-
-    const arr = Array.isArray(data) ? data : [];
-    info.textContent = 'Teritorii active: ' + arr.length;
-
-    if (!arr.length) {
-      list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
-      return;
+    function loadJsonp(url) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = url;
+        s.onload = () => { s.remove(); resolve(); };
+        s.onerror = () => { s.remove(); reject(new Error('JSONP load failed')); };
+        document.body.appendChild(s);
+      });
     }
-
-    list.innerHTML = '';
-    arr.forEach(row => {
-      const item = document.createElement('div');
-      item.className = 'evidenta-item';
-      item.innerHTML = `
-        <div class="evidenta-row">
-          <div>
-            <div class="e-label">Nume</div>
-            <div class="e-value">${esc(row.nume)}</div>
-          </div>
-          <div>
-            <div class="e-label">Teritoriu</div>
-            <div class="e-value">${esc(row.teritoriu)}</div>
-          </div>
-          <div>
-            <div class="e-label">Data atribuirii</div>
-            <div class="e-value">${esc(row.data)}</div>
-          </div>
-        </div>
-      `;
-      list.appendChild(item);
-    });
-  };
-
-  async function incarcaEvidenta() {
-    const list = document.getElementById('evidentaList');
-    setStatus('', '');
-    list.innerHTML = `<div class="evidenta-empty">Se încarcă…</div>`;
-
-    try {
-      await loadJsonp(SCRIPT_URL + '?action=evidenta&callback=populateEvidenta');
-    } catch (err) {
-      list.innerHTML = `<div class="evidenta-empty">Eroare la încărcare.</div>`;
-      setStatus('Eroare: ' + err, 'error');
-    }
-  }
-
-  window.addEventListener('load', () => incarcaEvidenta());
-</script>
-
 
     /* =====================================================
-       La încărcarea paginii, afișăm automat evidența
+       Callback-ul pe care îl apelează Apps Script:
+       populateEvidenta([...])
+       ===================================================== */
+    window.populateEvidenta = function(data) {
+      const list = document.getElementById('evidentaList');
+      const info = document.getElementById('info-teritorii');
+
+      const arr = Array.isArray(data) ? data : [];
+      info.textContent = 'Teritorii active: ' + arr.length;
+
+      if (!arr.length) {
+        list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
+        return;
+      }
+
+      list.innerHTML = '';
+      arr.forEach(row => {
+        const item = document.createElement('div');
+        item.className = 'evidenta-item';
+
+        item.innerHTML = `
+          <div class="evidenta-row">
+            <div>
+              <div class="e-label">Nume</div>
+              <div class="e-value">${esc(row.nume)}</div>
+            </div>
+            <div>
+              <div class="e-label">Teritoriu</div>
+              <div class="e-value">${esc(row.teritoriu)}</div>
+            </div>
+            <div>
+              <div class="e-label">Data atribuirii</div>
+              <div class="e-value">${esc(row.data)}</div>
+            </div>
+          </div>
+        `;
+
+        list.appendChild(item);
+      });
+    };
+
+    /* =====================================================
+       Încarcă Evidența prin JSONP:
+       SCRIPT_URL?action=evidenta&callback=populateEvidenta
+       ===================================================== */
+    async function incarcaEvidenta() {
+      const list = document.getElementById('evidentaList');
+
+      setStatus('', '');
+      list.innerHTML = `<div class="evidenta-empty">Se încarcă…</div>`;
+
+      try {
+        // IMPORTANT: callback trebuie să existe ca funcție globală (window.populateEvidenta)
+        await loadJsonp(SCRIPT_URL + '?action=evidenta&callback=populateEvidenta');
+      } catch (err) {
+        list.innerHTML = `<div class="evidenta-empty">Eroare la încărcare.</div>`;
+        setStatus('Eroare: ' + err, 'error');
+      }
+    }
+
+    /* =====================================================
+       Auto-load când se deschide pagina
        ===================================================== */
     window.addEventListener('load', () => {
       incarcaEvidenta();
