@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Evidență teritorii</title>
+<style>
+body {
+  font-family: Arial;
+  background:#eef1f6;
+  margin:0;
+}
+
+.container {
+  max-width:900px;
+  margin:40px auto 100px;
+  background:white;
+  padding:30px;
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+h2 {
+  text-align:center;
+  margin-bottom:20px;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+th, td {
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  text-align:left;
+}
+
+th {
+  background:#4e6ea7;
+  color:white;
+}
+
+.bottom-nav {
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:white;
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0;
+  box-shadow:0 -5px 20px rgba(0,0,0,0.1);
+}
+
+.bottom-nav a {
+  text-decoration:none;
+  color:#4e6ea7;
+  font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Evidență activă</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Nume</th>
+        <th>Teritoriu</th>
+        <th>Data atribuirii</th>
+      </tr>
+    </thead>
+    <tbody id="evidentaBody">
+    </tbody>
+  </table>
+</div>
+
+<div class="bottom-nav">
+  <a href="introducere.html">Intro</a>
+  <a href="predare.html">Predă</a>
+  <a href="evidenta.html">Evidență</a>
+</div>
+
+<script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbwJoRjlNGMAx0_WbHD19o2_dyFiH1fsyqfs8r8shLkrNMc-AP-KmMDuTp449gp1fe2_/exec";
+
+function loadEvidenta() {
+  fetch(scriptURL + "?action=evidenta")
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById("evidentaBody");
+      tbody.innerHTML = "";
+
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${row.nume}</td>
+          <td>${row.teritoriu}</td>
+          <td>${row.data}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    });
+}
+
+loadEvidenta();
+</script>
+
+</body>
+</html>
