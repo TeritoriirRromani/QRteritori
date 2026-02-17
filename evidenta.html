@@ -145,43 +145,62 @@
        Callback-ul pe care îl apelează Apps Script:
        populateEvidenta([...])
        ===================================================== */
-    window.populateEvidenta = function(data) {
-      const list = document.getElementById('evidentaList');
-      const info = document.getElementById('info-teritorii');
-
-      const arr = Array.isArray(data) ? data : [];
-      info.textContent = 'Teritorii active: ' + arr.length;
-
-      if (!arr.length) {
-        list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
-        return;
-      }
-
-      list.innerHTML = '';
-      arr.forEach(row => {
-        const item = document.createElement('div');
-        item.className = 'evidenta-item';
-
-        item.innerHTML = `
-          <div class="evidenta-row">
-            <div>
-              <div class="e-label">Nume</div>
-              <div class="e-value">${esc(row.nume)}</div>
+      window.populateEvidenta = function(data) {
+        const list = document.getElementById('evidentaList');
+        const info = document.getElementById('info-teritorii');
+      
+        let arr = Array.isArray(data) ? data : [];
+      
+        // 🔹 ORDONARE: cei cu cele mai puține zile rămase sus
+        arr.sort((a, b) => a.zileRamase - b.zileRamase);
+      
+        info.textContent = 'Teritorii active: ' + arr.length;
+      
+        if (!arr.length) {
+          list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
+          return;
+        }
+      
+        list.innerHTML = '';
+      
+        arr.forEach(row => {
+      
+          const zile = row.zileRamase;
+          const luni = Math.floor(zile / 30);  // aproximare 30 zile = 1 lună
+      
+          // 🔹 culoare în funcție de urgență
+          let color = "#365f9c";      // normal
+          if (zile <= 14) color = "#d93025";       // roșu urgent
+          else if (zile <= 30) color = "#f9a825";  // galben
+      
+          const item = document.createElement('div');
+          item.className = 'evidenta-item';
+      
+          item.innerHTML = `
+            <div class="evidenta-row">
+              <div>
+                <div class="e-label">Nume</div>
+                <div class="e-value">${esc(row.nume)}</div>
+              </div>
+      
+              <div>
+                <div class="e-label">Teritoriu</div>
+                <div class="e-value">${esc(row.teritoriu)}</div>
+              </div>
+      
+              <div>
+                <div class="e-label">Rămas</div>
+                <div class="e-value" style="color:${color}">
+                  ${zile} zile (${luni} luni)
+                </div>
+              </div>
             </div>
-            <div>
-              <div class="e-label">Teritoriu</div>
-              <div class="e-value">${esc(row.teritoriu)}</div>
-            </div>
-            <div>
-              <div class="e-label">Data atribuirii</div>
-              <div class="e-value">${esc(row.data)}</div>
-            </div>
-          </div>
-        `;
+          `;
+      
+          list.appendChild(item);
+        });
+      };
 
-        list.appendChild(item);
-      });
-    };
 
     /* =====================================================
        Încarcă Evidența prin JSONP:
