@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evidență teritorii</title>
 
-  <!-- EXACT ca la Introducere/Predare -->
+  <!-- Stil comun pentru toate paginile -->
   <link rel="stylesheet" href="introducere-style.css">
 
-  <!-- mic styling doar pentru listă (nu strică restul stilului) -->
+  <!-- ======================================================
+       Stiluri doar pentru lista Evidență (restul vine din CSS-ul comun)
+       ====================================================== -->
   <style>
     .evidenta-list {
       display: flex;
@@ -53,36 +55,47 @@
       border: 2px dashed #d4dff0;
       font-size: 14px;
       opacity: 0.85;
+      text-align: center;
     }
 
-    /* pe mobil: rânduri sub rânduri */
+    /* Pe mobil: afișăm câmpurile unul sub altul */
     @media (max-width: 520px) {
-      .evidenta-row {
-        grid-template-columns: 1fr;
-      }
+      .evidenta-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
 <body>
-  <!-- Badge sus -->
+
+  <!-- ======================================================
+       BADGE INFORMATIV (sus)
+       Afișează numărul de teritorii active (din Evidență)
+       ====================================================== -->
   <div class="page-info">
     <span id="info-teritorii">Teritorii active: 0</span>
   </div>
 
-  <!-- Card identic cu celelalte pagini -->
+  <!-- ======================================================
+       CARD PRINCIPAL
+       ====================================================== -->
   <div class="form-container">
     <h1>Evidență teritorii</h1>
 
+    <!-- Lista se umple din JS -->
     <div class="evidenta-list" id="evidentaList">
       <div class="evidenta-empty">Se încarcă…</div>
     </div>
 
+    <!-- Buton manual refresh -->
     <button type="button" onclick="incarcaEvidenta()">Reîncarcă</button>
+
+    <!-- Mesaj status -->
     <p id="status"></p>
   </div>
 
-  <!-- Bara jos identică -->
+  <!-- ======================================================
+       NAVIGAȚIE JOS
+       ====================================================== -->
   <nav class="bottom-nav">
     <a href="introducere.html">
       <img src="icon-introducere.svg" alt="Introducere" class="icon-img">
@@ -100,10 +113,22 @@
     </a>
   </nav>
 
-  <script>
-    // Folosește ACELAȘI URL ca în introducere.html / predare.html
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJoRjlNGMAx0_WbHD19o2_dyFiH1fsyqfs8r8shLkrNMc-AP-KmMDuTp449gp1fe2_/exec';
+  <!-- Config global cu SCRIPT_URL -->
+  <script src="config.js"></script>
 
+  <script>
+    /* =====================================================
+       FUNCȚIE AJUTĂTOARE – afișează mesaje în pagină
+       ===================================================== */
+    function setStatus(text, type) {
+      const status = document.getElementById('status');
+      status.textContent = text || '';
+      status.className = type || '';
+    }
+
+    /* =====================================================
+       Escape text ca să evităm probleme dacă apar caractere speciale
+       ===================================================== */
     function esc(s) {
       return String(s ?? '')
         .replaceAll('&', '&amp;')
@@ -113,30 +138,37 @@
         .replaceAll("'", '&#039;');
     }
 
+    /* =====================================================
+       ÎNCĂRCARE EVIDENȚĂ DIN APPS SCRIPT
+       endpoint: ?action=evidenta
+       returnează array cu:
+       { nume, teritoriu, data }
+       ===================================================== */
     async function incarcaEvidenta() {
-      const status = document.getElementById('status');
       const list = document.getElementById('evidentaList');
       const info = document.getElementById('info-teritorii');
 
-      status.textContent = '';
-      status.className = '';
+      setStatus('', '');
       list.innerHTML = `<div class="evidenta-empty">Se încarcă…</div>`;
 
       try {
         const resp = await fetch(SCRIPT_URL + '?action=evidenta');
         const data = await resp.json();
 
-        info.textContent = 'Teritorii active: ' + (Array.isArray(data) ? data.length : 0);
+        const arr = Array.isArray(data) ? data : [];
+        info.textContent = 'Teritorii active: ' + arr.length;
 
-        if (!Array.isArray(data) || data.length === 0) {
+        if (!arr.length) {
           list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
           return;
         }
 
+        // Construim lista de “carduri”
         list.innerHTML = '';
-        data.forEach(row => {
+        arr.forEach(row => {
           const item = document.createElement('div');
           item.className = 'evidenta-item';
+
           item.innerHTML = `
             <div class="evidenta-row">
               <div>
@@ -153,16 +185,19 @@
               </div>
             </div>
           `;
+
           list.appendChild(item);
         });
 
       } catch (err) {
         list.innerHTML = `<div class="evidenta-empty">Eroare la încărcare.</div>`;
-        status.textContent = 'Eroare: ' + err;
-        status.className = 'error';
+        setStatus('Eroare: ' + err, 'error');
       }
     }
 
+    /* =====================================================
+       La încărcarea paginii, afișăm automat evidența
+       ===================================================== */
     window.addEventListener('load', () => {
       incarcaEvidenta();
     });
