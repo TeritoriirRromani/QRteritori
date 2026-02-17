@@ -110,6 +110,24 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+        .btn-preda {
+      margin-top: 8px;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #365f9c;
+      color: white;
+      transition: 0.2s ease;
+    }
+    
+    .btn-preda:hover {
+      opacity: 0.85;
+    }
+
+
   </style>
 </head>
 
@@ -200,83 +218,86 @@
 
 
           window.populateEvidenta = function(data) {
-        const list = document.getElementById('evidentaList');
-        const info = document.getElementById('info-teritorii');
-      
-        let arr = Array.isArray(data) ? data : [];
-      
-        // 🔹 Ordonare: cei cu cele mai puține zile sus
-        arr.sort((a, b) => a.zileRamase - b.zileRamase);
-      
-        info.textContent = 'Teritorii active: ' + arr.length;
-      
-        if (!arr.length) {
-          list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
-          return;
-        }
-      
-        list.innerHTML = '';
-      
-        arr.forEach(row => {
-      
-          const zile = row.zileRamase;
-          const luni = Math.floor(zile / 30);
-          const totalPerioada = 120;
-          const procent = Math.min((zile / totalPerioada) * 100, 100);
-      
-          let badgeClass = "badge-ok";
-          let badgeText = "OK";
-          let barColor = "#1e8e3e";
-          let textColor = "#1e8e3e"; // verde default
-      
-          if (zile <= 14) {
-            badgeClass = "badge-urgent";
-            badgeText = "URGENT";
-            barColor = "#d93025";
-            textColor = "#d93025";   // 🔴 roșu
-          } else if (zile <= 30) {
-            badgeClass = "badge-warning";
-            badgeText = "ATENȚIE";
-            barColor = "#f9a825";
-            textColor = "#f9a825";   // 🟡 galben
-          }
-      
-          const item = document.createElement('div');
-          item.className = 'evidenta-item';
-      
-          item.innerHTML = `
-            <div class="evidenta-row">
-              <div>
-                <div class="e-label">Nume</div>
-                <div class="e-value">
-                  ${esc(row.nume)}
-                  <span class="badge ${badgeClass}">${badgeText}</span>
-                </div>
-              </div>
-      
-              <div>
-                <div class="e-label">Teritoriu</div>
-                <div class="e-value">${esc(row.teritoriu)}</div>
-              </div>
-      
-              <div>
-                <div class="e-label">Rămas</div>
-                <div class="e-value" style="color:${textColor}; font-weight:700;">
-                  ${zile} zile (${luni} luni)
-                </div>
-              </div>
-            </div>
-      
-            <div class="progress-container">
-              <div class="progress-bar" 
-                   style="width:${procent}%; background:${barColor};">
-              </div>
-            </div>
-          `;
-      
-          list.appendChild(item);
-        });
-      };
+  const list = document.getElementById('evidentaList');
+  const info = document.getElementById('info-teritorii');
+
+  let arr = Array.isArray(data) ? data : [];
+
+  arr.sort((a, b) => a.zileRamase - b.zileRamase);
+
+  info.textContent = 'Teritorii active: ' + arr.length;
+
+  if (!arr.length) {
+    list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+
+  arr.forEach(row => {
+
+    const zile = row.zileRamase;
+    const luni = Math.floor(zile / 30);
+    const totalPerioada = 120;
+    const procent = Math.min((zile / totalPerioada) * 100, 100);
+
+    let badgeClass = "badge-ok";
+    let badgeText = "OK";
+    let barColor = "#1e8e3e";
+    let textColor = "#1e8e3e";
+
+    if (zile <= 14) {
+      badgeClass = "badge-urgent";
+      badgeText = "URGENT";
+      barColor = "#d93025";
+      textColor = "#d93025";
+    } else if (zile <= 30) {
+      badgeClass = "badge-warning";
+      badgeText = "ATENȚIE";
+      barColor = "#f9a825";
+      textColor = "#f9a825";
+    }
+
+    const item = document.createElement('div');
+    item.className = 'evidenta-item';
+
+    item.innerHTML = `
+      <div class="evidenta-row">
+        <div>
+          <div class="e-label">Nume</div>
+          <div class="e-value">
+            ${esc(row.nume)}
+            <span class="badge ${badgeClass}">${badgeText}</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="e-label">Teritoriu</div>
+          <div class="e-value">${esc(row.teritoriu)}</div>
+        </div>
+
+        <div>
+          <div class="e-label">Rămas</div>
+          <div class="e-value" style="color:${textColor}; font-weight:700;">
+            ${zile} zile (${luni} luni)
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar" 
+             style="width:${procent}%; background:${barColor};">
+        </div>
+      </div>
+
+      <button class="btn-preda" onclick="predaDirect('${esc(row.teritoriu)}')">
+        Predă
+      </button>
+    `;
+
+    list.appendChild(item);
+  });
+};
 
 
 
@@ -303,6 +324,39 @@
         setStatus('Eroare: ' + err, 'error');
       }
     }
+
+    async function predaDirect(teritoriu) {
+
+  if (!confirm("Sigur vrei să predai teritoriul " + teritoriu + "?")) {
+    return;
+  }
+
+  const azi = new Date().toISOString().slice(0, 10);
+
+  const params = new URLSearchParams();
+  params.append('action', 'preda');
+  params.append('teritoriu', teritoriu);
+  params.append('data', azi);
+
+  try {
+    const resp = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: params
+    });
+
+    const json = await resp.json();
+
+    if (json.status === 'ok') {
+      incarcaEvidenta(); // refresh listă
+    } else {
+      alert("Eroare: " + json.mesaj);
+    }
+
+  } catch (err) {
+    alert("Eroare la predare: " + err);
+  }
+}
+
 
     /* =====================================================
        Auto-load când se deschide pagina
