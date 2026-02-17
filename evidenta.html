@@ -189,16 +189,16 @@
       </div>
     
       <div class="dash-card">
-        <div class="e-label">Lucrate ultimul an</div>
-        <div class="dash-num" id="d-an">-</div>
-        <div style="font-size:12px;opacity:0.7;" id="d-an-p">-</div>
-      </div>
-    
-      <div class="dash-card">
-        <div class="e-label">Active acum</div>
-        <div class="dash-num" id="d-active-perf">-</div>
-        <div style="font-size:12px;opacity:0.7;" id="d-active-p">-</div>
-      </div>
+  <div class="e-label">Lucrate ultimul an</div>
+  <canvas id="gaugeAn" height="120"></canvas>
+</div>
+
+<div class="dash-card">
+  <div class="e-label">Active acum</div>
+  <canvas id="gaugeActive" height="120"></canvas>
+</div>
+
+      
     </div>
 
     <!-- GRAFIC EVOLUȚIE -->
@@ -279,13 +279,37 @@
 }
 
 window.populatePerformance = function(d){
-  document.getElementById('d-an').textContent = d.lucrateAn ?? 0;
-  document.getElementById('d-an-p').textContent =
-    (d.procentAn ?? 0) + '% din total (' + (d.total ?? 0) + ')';
 
-  document.getElementById('d-active-perf').textContent = d.active ?? 0;
-  document.getElementById('d-active-p').textContent =
-    (d.procentActive ?? 0) + '% din total';
+  const procentAn = d.procentAn ?? 0;
+  const procentActive = d.procentActive ?? 0;
+
+  const ctxAn = document.getElementById('gaugeAn').getContext('2d');
+  const ctxActive = document.getElementById('gaugeActive').getContext('2d');
+
+  if (gaugeAnChart) gaugeAnChart.destroy();
+  if (gaugeActiveChart) gaugeActiveChart.destroy();
+
+  let colorAn = '#1e8e3e';
+  if (procentAn < 40) colorAn = '#d93025';
+  else if (procentAn < 70) colorAn = '#f9a825';
+
+  let colorActive = '#1e8e3e';
+  if (procentActive < 40) colorActive = '#d93025';
+  else if (procentActive < 70) colorActive = '#f9a825';
+
+  gaugeAnChart = createGauge(ctxAn, procentAn, colorAn);
+  gaugeActiveChart = createGauge(ctxActive, procentActive, colorActive);
+
+  // scriem procent în centru manual
+  document.getElementById('gaugeAn').parentElement.insertAdjacentHTML(
+    'beforeend',
+    `<div style="margin-top:-90px;font-size:18px;font-weight:800;">${procentAn}%</div>`
+  );
+
+  document.getElementById('gaugeActive').parentElement.insertAdjacentHTML(
+    'beforeend',
+    `<div style="margin-top:-90px;font-size:18px;font-weight:800;">${procentActive}%</div>`
+  );
 };
 
 
@@ -307,6 +331,31 @@ window.populatePerformance = function(d){
     // Evoluție (Chart.js) (JSONP)
     // ===============================
     let evoChart = null;
+
+    let gaugeAnChart = null;
+let gaugeActiveChart = null;
+
+function createGauge(ctx, procent, color) {
+
+  return new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [procent, 100 - procent],
+        backgroundColor: [color, '#e0e0e0'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      cutout: '70%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false }
+      }
+    }
+  });
+}
+
 
     function loadEvolutie(days = 30){
       return loadJsonp(SCRIPT_URL + `?action=evolutie&days=${days}&callback=populateEvolutie`);
