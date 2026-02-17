@@ -8,12 +8,14 @@
   <!-- Stil comun pentru toate paginile -->
   <link rel="stylesheet" href="introducere-style.css">
 
-  <!-- Stiluri doar pentru lista Evidență (restul vine din CSS-ul comun) -->
+  <!-- Chart.js pentru grafic (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     .evidenta-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
       margin-top: 10px;
       margin-bottom: 10px;
     }
@@ -21,14 +23,21 @@
     .evidenta-item {
       border: 2px solid #d4dff0;
       background: #f8fafd;
-      border-radius: 14px;
-      padding: 12px 14px;
+      border-radius: 16px;
+      padding: 14px;
       text-align: left;
+      animation: fadeIn 0.35s ease;
+      transition: 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .evidenta-row {
       display: grid;
-      grid-template-columns: 1.6fr 1fr 0.9fr;
+      grid-template-columns: 1.4fr 1fr 1fr;
       gap: 10px;
       align-items: start;
     }
@@ -42,328 +51,408 @@
     .e-value {
       font-size: 14px;
       font-weight: 600;
-      color: #365f9c;
       word-break: break-word;
     }
 
-    .evidenta-empty {
-      padding: 14px;
-      border-radius: 12px;
-      background: #f8fafd;
-      border: 2px dashed #d4dff0;
-      font-size: 14px;
-      opacity: 0.85;
-      text-align: center;
-    }
-
-    /* Pe mobil: afișăm câmpurile unul sub altul */
-    @media (max-width: 520px) {
-      .evidenta-row { grid-template-columns: 1fr; }
-    }
-
-        /* Badge status */
     .badge {
-      display: inline-block;
+      margin-left: 6px;
       padding: 4px 8px;
       border-radius: 20px;
       font-size: 11px;
-      font-weight: 600;
-      margin-left: 6px;
+      font-weight: 700;
     }
-    
-    .badge-urgent {
-      background: #ffd6d6;
-      color: #d93025;
-    }
-    
-    .badge-warning {
-      background: #fff3cd;
-      color: #f9a825;
-    }
-    
-    .badge-ok {
-      background: #e6f4ea;
-      color: #1e8e3e;
-    }
-    
-    /* Progress bar */
+    .badge-urgent { background:#ffd6d6; color:#d93025; }
+    .badge-warning { background:#fff3cd; color:#f9a825; }
+    .badge-ok { background:#e6f4ea; color:#1e8e3e; }
+
     .progress-container {
-      margin-top: 8px;
+      margin-top: 10px;
       height: 6px;
       background: #e0e0e0;
       border-radius: 6px;
       overflow: hidden;
     }
-    
-    .progress-bar {
-      height: 100%;
-      transition: width 0.6s ease;
-    }
-    
-    /* Mică animație la apariție */
-    .evidenta-item {
-      animation: fadeIn 0.4s ease forwards;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .progress-bar { height: 100%; transition: width 0.6s ease; }
 
-        .btn-preda {
-      margin-top: 8px;
-      padding: 6px 10px;
-      border: none;
+    /* Dashboard */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 10px 0 12px 0;
+    }
+    .dash-card {
+      border: 2px solid #d4dff0;
+      background: #f8fafd;
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+    }
+    .dash-num {
+      font-size: 18px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+    .dash-num.urgent { color: #d93025; }
+    .dash-num.warning { color: #f9a825; }
+    .dash-num.ok { color: #1e8e3e; }
+
+    /* Buton predă subtil */
+    .btn-preda {
+      margin-top: 10px;
+      padding: 5px 12px;
       border-radius: 8px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      background: #365f9c;
+      background: transparent;
+      border: 1.5px solid #365f9c;
+      color: #365f9c;
+      transition: all 0.2s ease;
+    }
+    .btn-preda:hover { background: #365f9c; color: white; }
+
+    .btn-preda.urgent {
+      border-color: #d93025;
+      color: #d93025;
+    }
+    .btn-preda.urgent:hover { background: #d93025; color: white; }
+
+    .fade-out {
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: 0.3s ease;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #323232;
       color: white;
-      transition: 0.2s ease;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 14px;
+      opacity: 0;
+      transition: 0.3s ease;
+      z-index: 999;
     }
-    
-    .btn-preda:hover {
-      opacity: 0.85;
+    .toast.show { opacity: 1; }
+
+    /* grafic container */
+    .chart-card canvas {
+      margin-top: 10px;
     }
 
-
+    @media (max-width: 700px) {
+      .dash-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px) {
+      .evidenta-row { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 
 <body>
-  <!-- Badge informativ (sus) -->
+
+  <!-- Badge sus -->
   <div class="page-info">
     <span id="info-teritorii">Teritorii active: 0</span>
   </div>
 
-  <!-- Card principal -->
   <div class="form-container">
     <h1>Evidență teritorii</h1>
 
-    <!-- Lista se umple din JS -->
-    <div class="evidenta-list" id="evidentaList">
-      <div class="evidenta-empty">Se încarcă…</div>
+    <!-- DASHBOARD -->
+    <div class="dash-grid">
+      <div class="dash-card">
+        <div class="e-label">Active</div>
+        <div class="dash-num" id="d-active">-</div>
+      </div>
+      <div class="dash-card">
+        <div class="e-label">Urgent (≤14)</div>
+        <div class="dash-num urgent" id="d-urgent">-</div>
+      </div>
+      <div class="dash-card">
+        <div class="e-label">Atenție (≤30)</div>
+        <div class="dash-num warning" id="d-atentie">-</div>
+      </div>
+      <div class="dash-card">
+        <div class="e-label">OK</div>
+        <div class="dash-num ok" id="d-ok">-</div>
+      </div>
     </div>
 
-    <!-- Buton manual refresh -->
-    <button type="button" onclick="incarcaEvidenta()">Reîncarcă</button>
+    <!-- GRAFIC EVOLUȚIE -->
+    <div class="evidenta-item chart-card">
+      <div class="e-label">Evoluție (ultimele 30 zile)</div>
+      <canvas id="chartEvo" height="120"></canvas>
+    </div>
 
-    <!-- Mesaj status -->
+    <!-- LISTĂ -->
+    <div class="evidenta-list" id="evidentaList">
+      <div class="evidenta-item">Se încarcă…</div>
+    </div>
+
+    <button type="button" onclick="refreshAll()">Reîncarcă tot</button>
     <p id="status"></p>
   </div>
 
-  <!-- Navigație jos -->
+  <!-- Nav jos -->
   <nav class="bottom-nav">
     <a href="introducere.html">
-      <img src="icon-introducere.svg" alt="Introducere" class="icon-img">
+      <img src="icon-introducere.svg" class="icon-img">
       <span class="label">Intro</span>
     </a>
-
     <a href="predare.html">
-      <img src="icon-predare.svg" alt="Predare" class="icon-img">
+      <img src="icon-predare.svg" class="icon-img">
       <span class="label">Predă</span>
     </a>
-
     <a href="evidenta.html" class="active">
-      <img src="icon-evidenta.svg" alt="Evidență" class="icon-img">
+      <img src="icon-evidenta.svg" class="icon-img">
       <span class="label">Evidență</span>
     </a>
   </nav>
 
-  <!-- Config global cu SCRIPT_URL (o singură dată) -->
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Script config -->
   <script src="config.js"></script>
 
   <script>
-    /* =====================================================
-       FUNCȚIE AJUTĂTOARE – afișează mesaje în pagină
-       ===================================================== */
-    function setStatus(text, type) {
-      const status = document.getElementById('status');
-      status.textContent = text || '';
-      status.className = type || '';
-    }
-
-    /* =====================================================
-       Escape text (evită probleme cu caractere speciale)
-       ===================================================== */
-    function esc(s) {
+    // ===============================
+    // Helpers
+    // ===============================
+    function esc(s){
       return String(s ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
     }
 
-    /* =====================================================
-       JSONP loader (ca în Introducere/Predare)
-       ===================================================== */
-    function loadJsonp(url) {
-      return new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = url;
-        s.onload = () => { s.remove(); resolve(); };
-        s.onerror = () => { s.remove(); reject(new Error('JSONP load failed')); };
+    function setStatus(text, type){
+      const el = document.getElementById('status');
+      el.textContent = text || '';
+      el.className = type || '';
+    }
+
+    function showToast(msg){
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'), 3500);
+    }
+
+    function loadJsonp(url){
+      return new Promise((resolve,reject)=>{
+        const s=document.createElement('script');
+        s.src=url;
+        s.onload=()=>{s.remove(); resolve();};
+        s.onerror=()=>{s.remove(); reject(new Error('JSONP load failed'));};
         document.body.appendChild(s);
       });
     }
 
-    /* =====================================================
-       Callback-ul pe care îl apelează Apps Script:
-       populateEvidenta([...])
-       ===================================================== */
-
-
-
-
-          window.populateEvidenta = function(data) {
-  const list = document.getElementById('evidentaList');
-  const info = document.getElementById('info-teritorii');
-
-  let arr = Array.isArray(data) ? data : [];
-
-  arr.sort((a, b) => a.zileRamase - b.zileRamase);
-
-  info.textContent = 'Teritorii active: ' + arr.length;
-
-  if (!arr.length) {
-    list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
-    return;
-  }
-
-  list.innerHTML = '';
-
-  arr.forEach(row => {
-
-    const zile = row.zileRamase;
-    const luni = Math.floor(zile / 30);
-    const totalPerioada = 120;
-    const procent = Math.min((zile / totalPerioada) * 100, 100);
-
-    let badgeClass = "badge-ok";
-    let badgeText = "OK";
-    let barColor = "#1e8e3e";
-    let textColor = "#1e8e3e";
-
-    if (zile <= 14) {
-      badgeClass = "badge-urgent";
-      badgeText = "URGENT";
-      barColor = "#d93025";
-      textColor = "#d93025";
-    } else if (zile <= 30) {
-      badgeClass = "badge-warning";
-      badgeText = "ATENȚIE";
-      barColor = "#f9a825";
-      textColor = "#f9a825";
+    // ===============================
+    // Dashboard (JSONP)
+    // ===============================
+    function loadDashboard(){
+      return loadJsonp(SCRIPT_URL + '?action=dashboard&callback=populateDashboard');
     }
 
-    const item = document.createElement('div');
-    item.className = 'evidenta-item';
+    window.populateDashboard = function(d){
+      document.getElementById('d-active').textContent = d?.active ?? 0;
+      document.getElementById('d-urgent').textContent = d?.urgent ?? 0;
+      document.getElementById('d-atentie').textContent = d?.atentie ?? 0;
+      document.getElementById('d-ok').textContent = d?.ok ?? 0;
+    };
 
-    item.innerHTML = `
-      <div class="evidenta-row">
-        <div>
-          <div class="e-label">Nume</div>
-          <div class="e-value">
-            ${esc(row.nume)}
-            <span class="badge ${badgeClass}">${badgeText}</span>
-          </div>
-        </div>
+    // ===============================
+    // Evoluție (Chart.js) (JSONP)
+    // ===============================
+    let evoChart = null;
 
-        <div>
-          <div class="e-label">Teritoriu</div>
-          <div class="e-value">${esc(row.teritoriu)}</div>
-        </div>
+    function loadEvolutie(days = 30){
+      return loadJsonp(SCRIPT_URL + `?action=evolutie&days=${days}&callback=populateEvolutie`);
+    }
 
-        <div>
-          <div class="e-label">Rămas</div>
-          <div class="e-value" style="color:${textColor}; font-weight:700;">
-            ${zile} zile (${luni} luni)
-          </div>
-        </div>
-      </div>
+    window.populateEvolutie = function(rows){
+      const arr = Array.isArray(rows) ? rows : [];
 
-      <div class="progress-container">
-        <div class="progress-bar" 
-             style="width:${procent}%; background:${barColor};">
-        </div>
-      </div>
+      const labels = arr.map(r => r.date);
+      const active = arr.map(r => r.active);
+      const urgent = arr.map(r => r.urgent);
 
-      <button class="btn-preda" onclick="predaDirect('${esc(row.teritoriu)}')">
-        Predă
-      </button>
-    `;
+      const ctx = document.getElementById('chartEvo').getContext('2d');
 
-    list.appendChild(item);
-  });
-};
+      if (evoChart) evoChart.destroy();
 
+      evoChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Active', data: active, tension: 0.35 },
+            { label: 'Urgente', data: urgent, tension: 0.35 }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    };
 
-
-
-
-    
-
-
-    /* =====================================================
-       Încarcă Evidența prin JSONP:
-       SCRIPT_URL?action=evidenta&callback=populateEvidenta
-       ===================================================== */
-    async function incarcaEvidenta() {
+    // ===============================
+    // Evidență (JSONP)
+    // ===============================
+    function loadEvidenta(){
       const list = document.getElementById('evidentaList');
+      list.innerHTML = `<div class="evidenta-item">Se încarcă…</div>`;
+      return loadJsonp(SCRIPT_URL + '?action=evidenta&callback=populateEvidenta');
+    }
 
-      setStatus('', '');
-      list.innerHTML = `<div class="evidenta-empty">Se încarcă…</div>`;
+    window.populateEvidenta = function(data){
+      const list = document.getElementById('evidentaList');
+      const info = document.getElementById('info-teritorii');
 
+      let arr = Array.isArray(data) ? data : [];
+      arr.sort((a,b) => (a.zileRamase ?? 0) - (b.zileRamase ?? 0));
+
+      info.textContent = 'Teritorii active: ' + arr.length;
+
+      if (!arr.length) {
+        list.innerHTML = `<div class="evidenta-item">Nu există teritorii active.</div>`;
+        return;
+      }
+
+      list.innerHTML = '';
+
+      arr.forEach(row => {
+        const teritoriu = String(row.teritoriu ?? '');
+        const zile = Number(row.zileRamase) || 0;
+        const luni = Math.floor(zile / 30);
+
+        const total = 120; // perioada standard
+        const procent = Math.min((zile / total) * 100, 100);
+
+        let badgeClass="badge-ok", badgeText="OK";
+        let barColor="#1e8e3e", textColor="#1e8e3e", btnClass="";
+
+        if (zile <= 14){
+          badgeClass="badge-urgent"; badgeText="URGENT";
+          barColor="#d93025"; textColor="#d93025"; btnClass="urgent";
+        } else if (zile <= 30){
+          badgeClass="badge-warning"; badgeText="ATENȚIE";
+          barColor="#f9a825"; textColor="#f9a825";
+        }
+
+        const card = document.createElement('div');
+        card.className = 'evidenta-item';
+        card.id = 'card-' + teritoriu;
+
+        card.innerHTML = `
+          <div class="evidenta-row">
+            <div>
+              <div class="e-label">Nume</div>
+              <div class="e-value">
+                ${esc(row.nume)}
+                <span class="badge ${badgeClass}">${badgeText}</span>
+              </div>
+              <div class="e-label" style="margin-top:6px;">Data atribuirii</div>
+              <div class="e-value" style="font-weight:600; opacity:0.9;">${esc(row.data)}</div>
+            </div>
+
+            <div>
+              <div class="e-label">Teritoriu</div>
+              <div class="e-value">${esc(teritoriu)}</div>
+            </div>
+
+            <div>
+              <div class="e-label">Rămas</div>
+              <div class="e-value" style="color:${textColor}; font-weight:800;">
+                ${zile} zile (${luni} luni)
+              </div>
+
+              <div style="margin-top:10px;">
+                <input type="date" id="date-${teritoriu}"
+                       value="${new Date().toISOString().slice(0,10)}"
+                       style="padding:4px;border-radius:6px;border:1px solid #ccc;font-size:12px;">
+                <button class="btn-preda ${btnClass}" onclick="predaDirect('${teritoriu}')">
+                  Predă
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-container">
+            <div class="progress-bar" style="width:${procent}%; background:${barColor};"></div>
+          </div>
+        `;
+
+        list.appendChild(card);
+      });
+    };
+
+    // ===============================
+    // Predare directă din evidență
+    // ===============================
+    async function predaDirect(teritoriu){
       try {
-        // IMPORTANT: callback trebuie să existe ca funcție globală (window.populateEvidenta)
-        await loadJsonp(SCRIPT_URL + '?action=evidenta&callback=populateEvidenta');
+        const input = document.getElementById('date-' + teritoriu);
+        const data = input?.value || new Date().toISOString().slice(0,10);
+
+        const card = document.getElementById('card-' + teritoriu);
+        if (card) card.classList.add('fade-out');
+
+        const params = new URLSearchParams();
+        params.append('action','preda');
+        params.append('teritoriu', teritoriu);
+        params.append('data', data);
+
+        const resp = await fetch(SCRIPT_URL, { method: 'POST', body: params });
+        const json = await resp.json();
+
+        if (json.status === 'ok') {
+          showToast('Teritoriu predat ✔');
+          // refresh după o mică pauză (să se vadă animația)
+          setTimeout(()=>refreshAll(), 450);
+        } else {
+          showToast('Eroare: ' + (json.mesaj || ''));
+          if (card) card.classList.remove('fade-out');
+        }
       } catch (err) {
-        list.innerHTML = `<div class="evidenta-empty">Eroare la încărcare.</div>`;
-        setStatus('Eroare: ' + err, 'error');
+        showToast('Eroare la predare');
+        const card = document.getElementById('card-' + teritoriu);
+        if (card) card.classList.remove('fade-out');
       }
     }
 
-    async function predaDirect(teritoriu) {
-
-  if (!confirm("Sigur vrei să predai teritoriul " + teritoriu + "?")) {
-    return;
-  }
-
-  const azi = new Date().toISOString().slice(0, 10);
-
-  const params = new URLSearchParams();
-  params.append('action', 'preda');
-  params.append('teritoriu', teritoriu);
-  params.append('data', azi);
-
-  try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: params
-    });
-
-    const json = await resp.json();
-
-    if (json.status === 'ok') {
-      incarcaEvidenta(); // refresh listă
-    } else {
-      alert("Eroare: " + json.mesaj);
+    // ===============================
+    // Refresh complet (dashboard + grafic + listă)
+    // ===============================
+    async function refreshAll(){
+      setStatus('', '');
+      try {
+        await loadDashboard();
+        await loadEvolutie(30);
+        await loadEvidenta();
+      } catch (e) {
+        setStatus('Eroare la încărcare: ' + e, 'error');
+      }
     }
 
-  } catch (err) {
-    alert("Eroare la predare: " + err);
-  }
-}
-
-
-    /* =====================================================
-       Auto-load când se deschide pagina
-       ===================================================== */
-    window.addEventListener('load', () => {
-      incarcaEvidenta();
-    });
+    window.addEventListener('load', refreshAll);
   </script>
 </body>
 </html>
