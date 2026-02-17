@@ -144,56 +144,87 @@
        returnează array cu:
        { nume, teritoriu, data }
        ===================================================== */
-    async function incarcaEvidenta() {
-      const list = document.getElementById('evidentaList');
-      const info = document.getElementById('info-teritorii');
+<script src="config.js"></script>
+<script>
+  function setStatus(text, type) {
+    const status = document.getElementById('status');
+    status.textContent = text || '';
+    status.className = type || '';
+  }
 
-      setStatus('', '');
-      list.innerHTML = `<div class="evidenta-empty">Se încarcă…</div>`;
+  function esc(s) {
+    return String(s ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
 
-      try {
-        const resp = await fetch(SCRIPT_URL + '?action=evidenta');
-        const data = await resp.json();
+  // JSONP loader (ca în celelalte pagini)
+  function loadJsonp(url) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = url;
+      s.onload = () => { s.remove(); resolve(); };
+      s.onerror = () => { s.remove(); reject(new Error('JSONP load failed')); };
+      document.body.appendChild(s);
+    });
+  }
 
-        const arr = Array.isArray(data) ? data : [];
-        info.textContent = 'Teritorii active: ' + arr.length;
+  // Callback-ul pe care îl va apela Apps Script
+  window.populateEvidenta = function(data) {
+    const list = document.getElementById('evidentaList');
+    const info = document.getElementById('info-teritorii');
 
-        if (!arr.length) {
-          list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
-          return;
-        }
+    const arr = Array.isArray(data) ? data : [];
+    info.textContent = 'Teritorii active: ' + arr.length;
 
-        // Construim lista de “carduri”
-        list.innerHTML = '';
-        arr.forEach(row => {
-          const item = document.createElement('div');
-          item.className = 'evidenta-item';
-
-          item.innerHTML = `
-            <div class="evidenta-row">
-              <div>
-                <div class="e-label">Nume</div>
-                <div class="e-value">${esc(row.nume)}</div>
-              </div>
-              <div>
-                <div class="e-label">Teritoriu</div>
-                <div class="e-value">${esc(row.teritoriu)}</div>
-              </div>
-              <div>
-                <div class="e-label">Data atribuirii</div>
-                <div class="e-value">${esc(row.data)}</div>
-              </div>
-            </div>
-          `;
-
-          list.appendChild(item);
-        });
-
-      } catch (err) {
-        list.innerHTML = `<div class="evidenta-empty">Eroare la încărcare.</div>`;
-        setStatus('Eroare: ' + err, 'error');
-      }
+    if (!arr.length) {
+      list.innerHTML = `<div class="evidenta-empty">Nu există teritorii active.</div>`;
+      return;
     }
+
+    list.innerHTML = '';
+    arr.forEach(row => {
+      const item = document.createElement('div');
+      item.className = 'evidenta-item';
+      item.innerHTML = `
+        <div class="evidenta-row">
+          <div>
+            <div class="e-label">Nume</div>
+            <div class="e-value">${esc(row.nume)}</div>
+          </div>
+          <div>
+            <div class="e-label">Teritoriu</div>
+            <div class="e-value">${esc(row.teritoriu)}</div>
+          </div>
+          <div>
+            <div class="e-label">Data atribuirii</div>
+            <div class="e-value">${esc(row.data)}</div>
+          </div>
+        </div>
+      `;
+      list.appendChild(item);
+    });
+  };
+
+  async function incarcaEvidenta() {
+    const list = document.getElementById('evidentaList');
+    setStatus('', '');
+    list.innerHTML = `<div class="evidenta-empty">Se încarcă…</div>`;
+
+    try {
+      await loadJsonp(SCRIPT_URL + '?action=evidenta&callback=populateEvidenta');
+    } catch (err) {
+      list.innerHTML = `<div class="evidenta-empty">Eroare la încărcare.</div>`;
+      setStatus('Eroare: ' + err, 'error');
+    }
+  }
+
+  window.addEventListener('load', () => incarcaEvidenta());
+</script>
+
 
     /* =====================================================
        La încărcarea paginii, afișăm automat evidența
