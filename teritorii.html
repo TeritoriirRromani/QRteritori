@@ -1,3 +1,273 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teritorii</title>
+
+  <!-- Stil comun -->
+  <link rel="stylesheet" href="introducere-style.css">
+
+  <style>
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 180px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid #d4dff0;
+      outline: none;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    .btn {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid #d4dff0;
+      background: #f8fafd;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .list {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .card{
+      border:2px solid #d4dff0;
+      background:#f8fafd;
+      border-radius:16px;
+      padding:14px;
+      animation: fadeIn .25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform: translateY(4px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap:10px;
+      align-items:start;
+    }
+
+    .label{ font-size:12px; opacity:.75; margin-bottom:4px; }
+    .val{ font-size:14px; font-weight:800; word-break:break-word; }
+
+    .badge{
+      display:inline-block;
+      margin-left:8px;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      vertical-align: middle;
+    }
+    .b-urgent{ background:#ffd6d6; color:#d93025; }
+    .b-warn{ background:#fff3cd; color:#f9a825; }
+    .b-ok{ background:#e6f4ea; color:#1e8e3e; }
+    .b-free{ background:#e8f0fe; color:#365f9c; }
+
+    .progress{
+      margin-top:10px;
+      height:7px;
+      border-radius:999px;
+      overflow:hidden;
+      background:#e0e0e0;
+    }
+    .bar{ height:100%; width:0%; transition:width .8s ease; }
+
+    details{ margin-top:10px; }
+    summary{ cursor:pointer; font-weight:800; opacity:.85; }
+
+    /* Istoric premium (telefon-friendly) */
+    .hist-block{
+      border:1px solid rgba(0,0,0,0.08);
+      border-radius:14px;
+      padding:12px;
+      background:rgba(248,250,253,0.95);
+      margin-top:10px;
+    }
+    .hist-name{
+      text-align:center;
+      font-weight:900;
+      margin-bottom:10px;
+    }
+    .hist-row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      padding:10px 0;
+      border-top:1px dashed rgba(0,0,0,0.12);
+    }
+    .hist-row:first-of-type{
+      border-top:none;
+      padding-top:0;
+    }
+    .hist-cell{ text-align:center; }
+    .hist-head{
+      font-size:11px;
+      font-weight:900;
+      opacity:0.65;
+      margin-bottom:4px;
+    }
+    .hist-val{
+      font-size:13px;
+      font-weight:900;
+    }
+
+    @media (max-width: 520px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    /* PRINT (Export PDF) */
+    @media print {
+      .bottom-nav, .top-actions, #status { display:none !important; }
+      body { background:white !important; }
+      .form-container { box-shadow:none !important; border:none !important; }
+      .card { page-break-inside: avoid; }
+      details { open: true; } /* la print, istoric deschis */
+    }
+
+    /* =======================
+   RAPORT PDF (layout fix)
+   ======================= */
+.pdf-report{
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10mm;
+  background: white;
+  color: black;
+}
+
+.pdf-title{
+  font-size: 18px;
+  font-weight: 1000;
+  margin: 0 0 6px 0;
+}
+.pdf-sub{
+  font-size: 12px;
+  opacity: .75;
+  margin: 0 0 12px 0;
+}
+
+.pdf-summary{
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 10px 0 14px 0;
+}
+.pdf-box{
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 8px;
+  text-align: center;
+}
+.pdf-box .k{ font-size: 10px; opacity: .7; font-weight: 900; }
+.pdf-box .v{ font-size: 16px; font-weight: 1000; margin-top: 2px; }
+
+.pdf-table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.pdf-table th, .pdf-table td{
+  border: 1px solid #ddd;
+  padding: 6px 7px;
+  vertical-align: top;
+}
+.pdf-table th{
+  background: #f3f6fb;
+  font-weight: 1000;
+  text-align: left;
+}
+
+.pdf-status{
+  font-weight: 1000;
+  padding: 2px 6px;
+  border-radius: 999px;
+  display: inline-block;
+  border: 1px solid #ddd;
+}
+.pdf-s-ok{ background:#e6f4ea; color:#1e8e3e; border-color:#cfe8d6; }
+.pdf-s-warn{ background:#fff3cd; color:#b07b00; border-color:#f0e0a6; }
+.pdf-s-urg{ background:#ffd6d6; color:#d93025; border-color:#f1b7b7; }
+.pdf-s-free{ background:#e8f0fe; color:#365f9c; border-color:#c9d8fb; }
+
+/* PRINT RULES */
+@media print {
+  @page { size: A4; margin: 10mm; }
+
+  /* ascundem UI și nav */
+  .form-container, .bottom-nav, .page-info { display:none !important; }
+
+  /* arătăm doar raportul */
+  #pdfReport { display:block !important; }
+
+  /* evită tăiere rânduri ciudat */
+  tr { break-inside: avoid; page-break-inside: avoid; }
+}
+
+    
+  </style>
+</head>
+
+<body>
+  <div class="page-info">
+    <span id="info">Teritorii: 0</span>
+  </div>
+
+  <div class="form-container">
+    <h1>Teritorii</h1>
+
+    <div class="top-actions">
+      <input class="search" id="q" placeholder="Caută teritoriu / frate..." />
+      <button class="btn" onclick="refresh()">Reîncarcă</button>
+      <button class="btn" onclick="exportPdf()">Export PDF</button>
+    </div>
+
+    <div class="list" id="list">
+      <div class="card">Se încarcă…</div>
+    </div>
+
+    <p id="status"></p>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="introducere.html">
+      <img src="icon-introducere.svg" class="icon-img">
+      <span class="label">Intro</span>
+    </a>
+    <a href="predare.html">
+      <img src="icon-predare.svg" class="icon-img">
+      <span class="label">Predă</span>
+    </a>
+    <a href="evidenta.html">
+      <img src="icon-evidenta.svg" class="icon-img">
+      <span class="label">Evidență</span>
+    </a>
+    <a href="teritorii.html" class="active">
+      <img src="icon-teritorii.svg" class="icon-img">
+      <span class="label">Teritorii</span>
+    </a>
+  </nav>
+
+  <!-- URL global -->
+  <script src="config.js"></script>
+
+
 <script>
   /* =========================================================
      CONFIG UI
