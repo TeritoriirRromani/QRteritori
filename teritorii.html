@@ -48,6 +48,12 @@
       background:#f8fafd;
       border-radius:16px;
       padding:14px;
+      animation: fadeIn .25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform: translateY(4px); }
+      to { opacity:1; transform: translateY(0); }
     }
 
     .row{
@@ -67,6 +73,7 @@
       border-radius:999px;
       font-size:11px;
       font-weight:900;
+      vertical-align: middle;
     }
     .b-urgent{ background:#ffd6d6; color:#d93025; }
     .b-warn{ background:#fff3cd; color:#f9a825; }
@@ -82,87 +89,57 @@
     }
     .bar{ height:100%; width:0%; transition:width .8s ease; }
 
-    details{
+    details{ margin-top:10px; }
+    summary{ cursor:pointer; font-weight:800; opacity:.85; }
+
+    /* Istoric premium (telefon-friendly) */
+    .hist-block{
+      border:1px solid rgba(0,0,0,0.08);
+      border-radius:14px;
+      padding:12px;
+      background:rgba(248,250,253,0.95);
       margin-top:10px;
     }
-    summary{
-      cursor:pointer;
-      font-weight:800;
-      opacity:.85;
+    .hist-name{
+      text-align:center;
+      font-weight:900;
+      margin-bottom:10px;
     }
-    .hist{
-      margin-top:8px;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
+    .hist-row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      padding:10px 0;
+      border-top:1px dashed rgba(0,0,0,0.12);
+    }
+    .hist-row:first-of-type{
+      border-top:none;
+      padding-top:0;
+    }
+    .hist-cell{ text-align:center; }
+    .hist-head{
+      font-size:11px;
+      font-weight:900;
+      opacity:0.65;
+      margin-bottom:4px;
+    }
+    .hist-val{
       font-size:13px;
-      opacity:.9;
-    }
-    .hist-item{
-      padding:8px 10px;
-      border-radius:12px;
-      border:1px solid rgba(0,0,0,0.06);
-      background:#fff;
+      font-weight:900;
     }
 
     @media (max-width: 520px){
       .row{ grid-template-columns: 1fr; }
     }
 
-    /* ========== PRINT (Export PDF) ========== */
+    /* PRINT (Export PDF) */
     @media print {
       .bottom-nav, .top-actions, #status { display:none !important; }
       body { background:white !important; }
       .form-container { box-shadow:none !important; border:none !important; }
       .card { page-break-inside: avoid; }
+      details { open: true; } /* la print, istoric deschis */
     }
-
-    .hist-block{
-  border:1px solid rgba(0,0,0,0.08);
-  border-radius:14px;
-  padding:12px;
-  background:rgba(248,250,253,0.95);
-  margin-top:10px;
-}
-
-.hist-name{
-  text-align:center;
-  font-weight:900;
-  margin-bottom:10px;
-}
-
-.hist-row{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:10px;
-  padding:10px 0;
-  border-top:1px dashed rgba(0,0,0,0.12);
-}
-
-.hist-row:first-of-type{
-  border-top:none;
-  padding-top:0;
-}
-
-.hist-cell{
-  text-align:center;
-}
-
-.hist-head{
-  font-size:11px;
-  font-weight:900;
-  opacity:0.65;
-  margin-bottom:4px;
-}
-
-.hist-val{
-  font-size:13px;
-  font-weight:900;
-}
-
-
-
-    
   </style>
 </head>
 
@@ -206,11 +183,21 @@
     </a>
   </nav>
 
+  <!-- URL global -->
   <script src="config.js"></script>
 
   <script>
+    /* =========================================================
+       CONFIG UI
+       ========================================================= */
     const STANDARD_DAYS = 120;
 
+    // cache local ca să nu rechemăm serverul la fiecare tastă
+    window.__rows = [];
+
+    /* =========================================================
+       Helpers
+       ========================================================= */
     function esc(s){
       return String(s ?? "")
         .replaceAll("&","&amp;")
@@ -226,44 +213,6 @@
       el.className = cls || "";
     }
 
-    function renderHistory(historyArr) {
-  if (!Array.isArray(historyArr) || !historyArr.length) return "";
-
-  return historyArr.map(h => {
-    const rows = (h.intrari || []).map(x => `
-      <div class="hist-row">
-        <div class="hist-cell">
-          <div class="hist-head">Dat</div>
-          <div class="hist-val">${x.dat || "-"}</div>
-        </div>
-        <div class="hist-cell">
-          <div class="hist-head">Predat</div>
-          <div class="hist-val">${x.predat || "-"}</div>
-        </div>
-      </div>
-    `).join("");
-
-    return `
-      <div class="hist-block">
-        <div class="hist-name">${h.nume}</div>
-        ${rows}
-      </div>
-    `;
-  }).join("");
-}
-
-    function formatDeadline(t) {
-  if (!t.dataLimita) return "-";
-
-  const z = Number(t.zileRamase);
-  if (isNaN(z)) return t.dataLimita;
-
-  if (z < 0) return `${t.dataLimita} (expirat de ${Math.abs(z)} zile)`;
-  return `${t.dataLimita} (${z} zile)`;
-}
-
-
-
     function loadJsonp(url){
       return new Promise((resolve, reject)=>{
         const s = document.createElement("script");
@@ -274,7 +223,47 @@
       });
     }
 
-    window.populateTeritorii = function(rows){
+    function renderHistory(historyArr) {
+      if (!Array.isArray(historyArr) || !historyArr.length) return "";
+
+      return historyArr.map(h => {
+        const rows = (h.intrari || []).map(x => `
+          <div class="hist-row">
+            <div class="hist-cell">
+              <div class="hist-head">Dat</div>
+              <div class="hist-val">${esc(x.dat || "-")}</div>
+            </div>
+            <div class="hist-cell">
+              <div class="hist-head">Predat</div>
+              <div class="hist-val">${esc(x.predat || "-")}</div>
+            </div>
+          </div>
+        `).join("");
+
+        return `
+          <div class="hist-block">
+            <div class="hist-name">${esc(h.nume || "—")}</div>
+            ${rows}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function formatDeadline(t) {
+      // t.dataLimita + (zileRamase)
+      if (!t.dataLimita) return "—";
+
+      const z = Number(t.zileRamase);
+      if (isNaN(z)) return esc(t.dataLimita);
+
+      if (z < 0) return `${esc(t.dataLimita)} (expirat de ${Math.abs(z)} zile)`;
+      return `${esc(t.dataLimita)} (${z} zile)`;
+    }
+
+    /* =========================================================
+       Render list (filtrare + sort alfabetică)
+       ========================================================= */
+    function renderList(rows){
       const list = document.getElementById("list");
       const info = document.getElementById("info");
       const q = (document.getElementById("q").value || "").toLowerCase().trim();
@@ -294,27 +283,32 @@
         return;
       }
 
-      // sort: cele active/urgente sus
-      filtered.sort((a,b)=>{
-        const za = (a.zileRamase === null ? 999999 : a.zileRamase);
-        const zb = (b.zileRamase === null ? 999999 : b.zileRamase);
-        return za - zb;
-      });
+      // ✅ sortare alfabetică după teritoriu
+      filtered.sort((a,b)=> String(a.teritoriu||"").localeCompare(String(b.teritoriu||""), "ro"));
 
       list.innerHTML = "";
-      filtered.forEach(r=>{
-        const zile = (r.zileRamase === null ? null : Number(r.zileRamase));
-        const luni = (zile === null ? "" : Math.floor(Math.max(zile,0)/30));
 
+      filtered.forEach(r=>{
+        const esteActiv = !!r.frateCurent;
+
+        const zile = (r.zileRamase === null || r.zileRamase === undefined) ? null : Number(r.zileRamase);
+        const pct = (zile === null) ? 0 : Math.min(Math.max((zile / STANDARD_DAYS) * 100, 0), 100);
+
+        // badge + color
         let badge = "b-free", badgeTxt = "LIBER", color="#365f9c";
-        if (r.frateCurent){
+
+        if (esteActiv){
           badge = "b-ok"; badgeTxt = "OK"; color="#1e8e3e";
           if (zile !== null && zile <= 0) { badge="b-urgent"; badgeTxt="EXPIRAT"; color="#d93025"; }
           else if (zile !== null && zile < 7) { badge="b-urgent"; badgeTxt="URGENT"; color="#d93025"; }
           else if (zile !== null && zile <= 30) { badge="b-warn"; badgeTxt="ATENȚIE"; color="#f9a825"; }
         }
 
-        const pct = (zile === null) ? 0 : Math.min(Math.max((zile / STANDARD_DAYS) * 100, 0), 100);
+        // pentru LIBER: ultima atribuire (opțional)
+        const la = r.lastAssignment || null;
+        const lastLine = (!esteActiv && la && (la.nume || la.dat || la.predat))
+          ? `${esc(la.nume || "—")} • ${esc(la.dat || "—")} → ${esc(la.predat || "—")}`
+          : "";
 
         const hist = Array.isArray(r.history) ? r.history : [];
 
@@ -325,19 +319,25 @@
             <div>
               <div class="label">Teritoriu</div>
               <div class="val">${esc(r.teritoriu)} <span class="badge ${badge}">${badgeTxt}</span></div>
+
+              ${lastLine ? `
+                <div class="label" style="margin-top:6px;">Ultima dată</div>
+                <div class="val" style="font-weight:700; opacity:.9;">${lastLine}</div>
+              ` : ""}
             </div>
 
             <div>
               <div class="label">Frate curent</div>
               <div class="val">${esc(r.frateCurent || "—")}</div>
+
               <div class="label" style="margin-top:6px;">Data atribuirii</div>
-              <div class="val">${esc(r.dataAtribuire || "—")}</div>
+              <div class="val">${esc(r.dataAtribuireCurenta || "—")}</div>
             </div>
 
             <div>
-              <div class="label">Rămas</div>
+              <div class="label">Limită</div>
               <div class="val" style="color:${color};">
-                ${zile === null ? "—" : `${zile} zile (${luni} luni)`}
+                ${esteActiv ? formatDeadline(r) : "—"}
               </div>
 
               <div class="progress">
@@ -349,40 +349,50 @@
           ${hist.length ? `
             <details>
               <summary>Istoric (${hist.length})</summary>
-              <div class="hist">
-                ${hist.map(h => `
-                  <div class="hist-item">
-                    <b>${esc(h.nume || "—")}</b> • dat: ${esc(h.data || "—")} • predat: ${esc(h.predat || "—")}
-                  </div>
-                `).join("")}
-              </div>
+              ${renderHistory(hist)}
             </details>
           ` : ""}
         `;
+
         list.appendChild(card);
       });
+    }
+
+    /* =========================================================
+       JSONP callback
+       ========================================================= */
+    window.populateTeritorii = function(rows){
+      window.__rows = Array.isArray(rows) ? rows : [];
+      renderList(window.__rows);
     };
 
+    /* =========================================================
+       Actions
+       ========================================================= */
     async function refresh(){
       setStatus("", "");
       document.getElementById("list").innerHTML = `<div class="card">Se încarcă…</div>`;
+
       try{
+        if (typeof SCRIPT_URL === "undefined" || !SCRIPT_URL) {
+          throw new Error("SCRIPT_URL lipsește (verifică config.js)");
+        }
+
+        // IMPORTANT: action trebuie să fie EXACT "teritorii" în doGet
         await loadJsonp(SCRIPT_URL + "?action=teritorii&callback=populateTeritorii");
       } catch(e){
-        setStatus("Eroare la încărcare: " + e, "error");
+        setStatus("Eroare la încărcare: " + e.message, "error");
         document.getElementById("list").innerHTML = `<div class="card">Eroare la încărcare.</div>`;
       }
     }
 
     function exportPdf(){
-      // deschide dialogul de print, unde alegi "Save as PDF"
       window.print();
     }
 
+    // filtrare locală (fără refresh)
     document.getElementById("q").addEventListener("input", ()=>{
-      // refiltrăm fără să mai chemăm serverul: ținem ultima încărcare în window.__rows
-      // (cel mai simplu: reîncărcăm)
-      refresh();
+      renderList(window.__rows);
     });
 
     window.addEventListener("load", refresh);
