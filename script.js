@@ -2,8 +2,22 @@
    CONFIG
    ========================================================= */
 
-const STANDARD_DAYS = 120;          // 4 luni
+// 4 luni = 120 zile (pentru bară)
+const STANDARD_DAYS = 120;
+
+// Delay redirect automat (când e un singur link)
 const AUTO_REDIRECT_DELAY_MS = 2200;
+
+// Fallback URL (dacă config.js nu e încărcat / SCRIPT_URL lipsește)
+const FALLBACK_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbx49hDTAhuifxbylssXlhhlhO5Le70iTxWokvagKUnOXYsItpMwqIhMcOSKsVp2myw/exec";
+
+// Aici alegem URL-ul real:
+// - dacă există SCRIPT_URL (din config.js), îl folosim
+// - altfel folosim fallback
+const AS_URL = (typeof SCRIPT_URL !== "undefined" && SCRIPT_URL)
+  ? SCRIPT_URL
+  : FALLBACK_SCRIPT_URL;
 
 /* =========================================================
    VERSE ROTATOR
@@ -17,12 +31,14 @@ const verses = [
   "„Iehova este bun cu toți...” — Psalmul 145:9"
 ];
 
+// Elemente din pagină
 const verseEl = document.getElementById("verse");
 const titleEl = document.getElementById("title");
 const subtitleEl = document.getElementById("subtitle");
 const loaderEl = document.getElementById("loader");
 const buttonsEl = document.getElementById("buttons");
 
+// Rotire versete
 function showRandomVerse() {
   if (!verseEl) return;
   verseEl.style.opacity = 0;
@@ -33,6 +49,19 @@ function showRandomVerse() {
 }
 showRandomVerse();
 const verseInterval = setInterval(showRandomVerse, 5000);
+
+// Helper: oprește “loading mode”
+function stopLoadingUI() {
+  if (loaderEl) loaderEl.style.display = "none";
+  if (subtitleEl) subtitleEl.style.display = "none";
+  clearInterval(verseInterval);
+}
+
+// Helper: afișează eroare clară în UI
+function showErrorUI(msg) {
+  stopLoadingUI();
+  if (titleEl) titleEl.innerText = msg || "Eroare";
+}
 
 /* =========================================================
    HELPERS
@@ -61,7 +90,7 @@ function animateNumber(el, target) {
    ========================================================= */
 
 function renderTerritoryStatus({ prenume, teritoriu, zileRamase }) {
-
+  // creăm / găsim un mount deasupra butoanelor
   let mount = document.getElementById("territoryStatus");
   if (!mount) {
     mount = document.createElement("div");
@@ -91,6 +120,7 @@ function renderTerritoryStatus({ prenume, teritoriu, zileRamase }) {
   } else if (zile <= 30) {
     badgeTxt = "ATENȚIE";
     badgeColor = "#f9a825";
+    msg = "⏳ Încearcă să finalizezi cât mai repede.";
   }
 
   const pct = Math.min(Math.max((zile / STANDARD_DAYS) * 100, 0), 100);
@@ -104,7 +134,7 @@ function renderTerritoryStatus({ prenume, teritoriu, zileRamase }) {
       background:white;
       box-shadow:0 10px 28px rgba(0,0,0,0.08);
     ">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
         <div style="font-weight:900;">Salut, ${prenume || ""}!</div>
         <span style="
           background:${badgeColor};
@@ -113,6 +143,7 @@ function renderTerritoryStatus({ prenume, teritoriu, zileRamase }) {
           border-radius:999px;
           font-size:11px;
           font-weight:900;
+          white-space:nowrap;
         ">${badgeTxt}</span>
       </div>
 
@@ -135,10 +166,13 @@ function renderTerritoryStatus({ prenume, teritoriu, zileRamase }) {
     </div>
   `;
 
-  animateNumber(document.getElementById("daysCount"), Math.max(zile, 0));
+  const countEl = document.getElementById("daysCount");
+  const barEl = document.getElementById("daysBar");
+
+  if (countEl) animateNumber(countEl, Math.max(zile, 0));
   setTimeout(() => {
-    document.getElementById("daysBar").style.width = pct + "%";
-  }, 100);
+    if (barEl) barEl.style.width = pct + "%";
+  }, 120);
 }
 
 /* =========================================================
@@ -147,6 +181,7 @@ function renderTerritoryStatus({ prenume, teritoriu, zileRamase }) {
 
 const k = getParam("k");
 
+// prenume din “Abrudan Alin” -> “Alin”
 let prenume = "";
 if (k) {
   prenume = k.trim().split(" ").pop();
@@ -154,49 +189,51 @@ if (k) {
   if (nameEl) nameEl.innerText = prenume;
 }
 
+// fără k -> stop
 if (!k) {
-  titleEl && (titleEl.innerText = "Lipsește parametrul k");
-  loaderEl && (loaderEl.style.display = "none");
-  subtitleEl && (subtitleEl.style.display = "none");
-  clearInterval(verseInterval);
+  showErrorUI("Lipsește parametrul k");
 } else {
+  // Afișăm (opțional) în consolă ce URL folosește
+  console.log("Apps Script URL folosit:", AS_URL);
 
-  // 🔥 FOLOSIM SCRIPT_URL DIN config.js
-  fetch(SCRIPT_URL + "?k=" + encodeURIComponent(k))
-    .then(r => r.json())
+  fetch(AS_URL + "?k=" + encodeURIComponent(k))
+    .then(r => {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
     .then(data => {
-
-      loaderEl && (loaderEl.style.display = "none");
-      subtitleEl && (subtitleEl.style.display = "none");
-      clearInterval(verseInterval);
+      stopLoadingUI();
 
       if (!Array.isArray(data) || !data.length) {
-        titleEl && (titleEl.innerText = "Nu există linkuri pentru acest cod");
+        if (titleEl) titleEl.innerText = "Nu există linkuri pentru acest cod";
         return;
       }
 
       const primary = data[0];
 
+      // card status (folosește primul item ca referință)
       renderTerritoryStatus({
         prenume,
         teritoriu: primary.label,
         zileRamase: primary.zileRamase
       });
 
-      titleEl && (titleEl.innerText = `Alege unde vrei să mergi, ${prenume}`);
+      if (titleEl) titleEl.innerText = `Alege unde vrei să mergi, ${prenume}`;
 
-      // Redirect automat dacă e un singur link
+      // 1 link -> redirect după puțin timp
       if (data.length === 1 && primary.url) {
-        buttonsEl && (buttonsEl.innerHTML = "");
-        titleEl && (titleEl.innerText = `Se deschide teritoriul, ${prenume}…`);
+        if (buttonsEl) buttonsEl.innerHTML = "";
+        if (titleEl) titleEl.innerText = `Se deschide teritoriul, ${prenume}…`;
+
         setTimeout(() => {
           window.location.href = primary.url;
         }, AUTO_REDIRECT_DELAY_MS);
+
         return;
       }
 
-      // Mai multe linkuri → butoane cu zile
-      buttonsEl && (buttonsEl.innerHTML = "");
+      // mai multe -> butoane cu zile
+      if (buttonsEl) buttonsEl.innerHTML = "";
 
       data.forEach(item => {
         const zile = Number(item.zileRamase) || 0;
@@ -207,7 +244,6 @@ if (!k) {
         else if (zile <= 30) accent = "#f9a825";
 
         const btn = document.createElement("button");
-
         btn.innerHTML = `
           <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
             <div style="font-weight:800;">${item.label || "Deschide link"}</div>
@@ -220,15 +256,11 @@ if (!k) {
         btn.style.borderLeft = `6px solid ${accent}`;
         btn.onclick = () => window.location.href = item.url;
 
-        buttonsEl.appendChild(btn);
+        if (buttonsEl) buttonsEl.appendChild(btn);
       });
-
     })
     .catch(err => {
-      loaderEl && (loaderEl.style.display = "none");
-      subtitleEl && (subtitleEl.style.display = "none");
-      titleEl && (titleEl.innerText = "Eroare la încărcare");
-      clearInterval(verseInterval);
       console.error(err);
+      showErrorUI("Eroare la încărcare (verifică URL / deploy / permisiuni)");
     });
 }
