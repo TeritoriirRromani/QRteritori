@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teritorii</title>
+
+  <!-- Stil comun -->
+  <link rel="stylesheet" href="introducere-style.css">
+
+  <style>
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 180px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid #d4dff0;
+      outline: none;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    .btn {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid #d4dff0;
+      background: #f8fafd;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .list {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .card{
+      border:2px solid #d4dff0;
+      background:#f8fafd;
+      border-radius:16px;
+      padding:14px;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap:10px;
+      align-items:start;
+    }
+
+    .label{ font-size:12px; opacity:.75; margin-bottom:4px; }
+    .val{ font-size:14px; font-weight:800; word-break:break-word; }
+
+    .badge{
+      display:inline-block;
+      margin-left:8px;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+    }
+    .b-urgent{ background:#ffd6d6; color:#d93025; }
+    .b-warn{ background:#fff3cd; color:#f9a825; }
+    .b-ok{ background:#e6f4ea; color:#1e8e3e; }
+    .b-free{ background:#e8f0fe; color:#365f9c; }
+
+    .progress{
+      margin-top:10px;
+      height:7px;
+      border-radius:999px;
+      overflow:hidden;
+      background:#e0e0e0;
+    }
+    .bar{ height:100%; width:0%; transition:width .8s ease; }
+
+    details{
+      margin-top:10px;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:800;
+      opacity:.85;
+    }
+    .hist{
+      margin-top:8px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      font-size:13px;
+      opacity:.9;
+    }
+    .hist-item{
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid rgba(0,0,0,0.06);
+      background:#fff;
+    }
+
+    @media (max-width: 520px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    /* ========== PRINT (Export PDF) ========== */
+    @media print {
+      .bottom-nav, .top-actions, #status { display:none !important; }
+      body { background:white !important; }
+      .form-container { box-shadow:none !important; border:none !important; }
+      .card { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-info">
+    <span id="info">Teritorii: 0</span>
+  </div>
+
+  <div class="form-container">
+    <h1>Teritorii</h1>
+
+    <div class="top-actions">
+      <input class="search" id="q" placeholder="Caută teritoriu / frate..." />
+      <button class="btn" onclick="refresh()">Reîncarcă</button>
+      <button class="btn" onclick="exportPdf()">Export PDF</button>
+    </div>
+
+    <div class="list" id="list">
+      <div class="card">Se încarcă…</div>
+    </div>
+
+    <p id="status"></p>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="introducere.html">
+      <img src="icon-introducere.svg" class="icon-img">
+      <span class="label">Intro</span>
+    </a>
+    <a href="predare.html">
+      <img src="icon-predare.svg" class="icon-img">
+      <span class="label">Predă</span>
+    </a>
+    <a href="evidenta.html">
+      <img src="icon-evidenta.svg" class="icon-img">
+      <span class="label">Evidență</span>
+    </a>
+    <a href="teritorii.html" class="active">
+      <span class="label">Teritorii</span>
+    </a>
+  </nav>
+
+  <script src="config.js"></script>
+
+  <script>
+    const STANDARD_DAYS = 120;
+
+    function esc(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function setStatus(t, cls){
+      const el = document.getElementById("status");
+      el.textContent = t || "";
+      el.className = cls || "";
+    }
+
+    function loadJsonp(url){
+      return new Promise((resolve, reject)=>{
+        const s = document.createElement("script");
+        s.src = url;
+        s.onload = ()=>{ s.remove(); resolve(); };
+        s.onerror = ()=>{ s.remove(); reject(new Error("JSONP load failed")); };
+        document.body.appendChild(s);
+      });
+    }
+
+    window.populateTeritorii = function(rows){
+      const list = document.getElementById("list");
+      const info = document.getElementById("info");
+      const q = (document.getElementById("q").value || "").toLowerCase().trim();
+
+      const arr = Array.isArray(rows) ? rows : [];
+      info.textContent = "Teritorii: " + arr.length;
+
+      const filtered = q
+        ? arr.filter(r =>
+            (r.teritoriu || "").toLowerCase().includes(q) ||
+            (r.frateCurent || "").toLowerCase().includes(q)
+          )
+        : arr;
+
+      if (!filtered.length){
+        list.innerHTML = `<div class="card">Nu există rezultate.</div>`;
+        return;
+      }
+
+      // sort: cele active/urgente sus
+      filtered.sort((a,b)=>{
+        const za = (a.zileRamase === null ? 999999 : a.zileRamase);
+        const zb = (b.zileRamase === null ? 999999 : b.zileRamase);
+        return za - zb;
+      });
+
+      list.innerHTML = "";
+      filtered.forEach(r=>{
+        const zile = (r.zileRamase === null ? null : Number(r.zileRamase));
+        const luni = (zile === null ? "" : Math.floor(Math.max(zile,0)/30));
+
+        let badge = "b-free", badgeTxt = "LIBER", color="#365f9c";
+        if (r.frateCurent){
+          badge = "b-ok"; badgeTxt = "OK"; color="#1e8e3e";
+          if (zile !== null && zile <= 0) { badge="b-urgent"; badgeTxt="EXPIRAT"; color="#d93025"; }
+          else if (zile !== null && zile < 7) { badge="b-urgent"; badgeTxt="URGENT"; color="#d93025"; }
+          else if (zile !== null && zile <= 30) { badge="b-warn"; badgeTxt="ATENȚIE"; color="#f9a825"; }
+        }
+
+        const pct = (zile === null) ? 0 : Math.min(Math.max((zile / STANDARD_DAYS) * 100, 0), 100);
+
+        const hist = Array.isArray(r.history) ? r.history : [];
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="row">
+            <div>
+              <div class="label">Teritoriu</div>
+              <div class="val">${esc(r.teritoriu)} <span class="badge ${badge}">${badgeTxt}</span></div>
+            </div>
+
+            <div>
+              <div class="label">Frate curent</div>
+              <div class="val">${esc(r.frateCurent || "—")}</div>
+              <div class="label" style="margin-top:6px;">Data atribuirii</div>
+              <div class="val">${esc(r.dataAtribuire || "—")}</div>
+            </div>
+
+            <div>
+              <div class="label">Rămas</div>
+              <div class="val" style="color:${color};">
+                ${zile === null ? "—" : `${zile} zile (${luni} luni)`}
+              </div>
+
+              <div class="progress">
+                <div class="bar" style="background:${color}; width:${pct}%;"></div>
+              </div>
+            </div>
+          </div>
+
+          ${hist.length ? `
+            <details>
+              <summary>Istoric (${hist.length})</summary>
+              <div class="hist">
+                ${hist.map(h => `
+                  <div class="hist-item">
+                    <b>${esc(h.nume || "—")}</b> • dat: ${esc(h.data || "—")} • predat: ${esc(h.predat || "—")}
+                  </div>
+                `).join("")}
+              </div>
+            </details>
+          ` : ""}
+        `;
+        list.appendChild(card);
+      });
+    };
+
+    async function refresh(){
+      setStatus("", "");
+      document.getElementById("list").innerHTML = `<div class="card">Se încarcă…</div>`;
+      try{
+        await loadJsonp(SCRIPT_URL + "?action=teritorii&callback=populateTeritorii");
+      } catch(e){
+        setStatus("Eroare la încărcare: " + e, "error");
+        document.getElementById("list").innerHTML = `<div class="card">Eroare la încărcare.</div>`;
+      }
+    }
+
+    function exportPdf(){
+      // deschide dialogul de print, unde alegi "Save as PDF"
+      window.print();
+    }
+
+    document.getElementById("q").addEventListener("input", ()=>{
+      // refiltrăm fără să mai chemăm serverul: ținem ultima încărcare în window.__rows
+      // (cel mai simplu: reîncărcăm)
+      refresh();
+    });
+
+    window.addEventListener("load", refresh);
+  </script>
+</body>
+</html>
