@@ -103,8 +103,9 @@ function animateNumber(el, target) {
    STATUS CARD
    ========================================================= */
 
-function renderTerritoryStatus({ prenume, teritoriu, zileRamase }) {
-  // creăm / găsim un mount deasupra butoanelor
+function renderTerritoryStatusList({ prenume, items }) {
+
+  // mount deasupra butoanelor
   let mount = document.getElementById("territoryStatus");
   if (!mount) {
     mount = document.createElement("div");
@@ -116,32 +117,19 @@ function renderTerritoryStatus({ prenume, teritoriu, zileRamase }) {
     }
   }
 
-  const zile = Number(zileRamase) || 0;
-  const luni = Math.floor(Math.max(zile, 0) / 30);
+  // sortăm: cele mai urgente primele (zile mici)
+  const arr = Array.isArray(items) ? [...items] : [];
+  arr.sort((a, b) => (Number(a.zileRamase) || 0) - (Number(b.zileRamase) || 0));
 
-  let badgeTxt = "OK";
-  let badgeColor = "#1e8e3e";
-  let msg = "";
+  // sumar
+  const total = arr.length;
+  const urgent = arr.filter(x => (Number(x.zileRamase) || 0) > 0 && (Number(x.zileRamase) || 0) < 7).length;
+  const expirat = arr.filter(x => (Number(x.zileRamase) || 0) <= 0).length;
 
-  if (zile <= 0) {
-    badgeTxt = "EXPIRAT";
-    badgeColor = "#d93025";
-    msg = "⚠ Teritoriul trebuie predat imediat!";
-  } else if (zile < 7) {
-    badgeTxt = "URGENT";
-    badgeColor = "#d93025";
-    msg = "⚠ Mai ai foarte puțin timp!";
-  } else if (zile <= 30) {
-    badgeTxt = "ATENȚIE";
-    badgeColor = "#f9a825";
-    msg = "⏳ Încearcă să finalizezi cât mai repede.";
-  }
-
-  const pct = Math.min(Math.max((zile / STANDARD_DAYS) * 100, 0), 100);
-
+  // construim cardul mare + mini-carduri
   mount.innerHTML = `
     <div style="
-      margin:14px auto 18px auto;
+      margin:14px auto 14px auto;
       max-width:520px;
       border-radius:18px;
       padding:16px;
@@ -150,44 +138,89 @@ function renderTerritoryStatus({ prenume, teritoriu, zileRamase }) {
     ">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
         <div style="font-weight:900;">Salut, ${prenume || ""}!</div>
-        <span style="
-          background:${badgeColor};
-          color:white;
-          padding:6px 10px;
-          border-radius:999px;
-          font-size:11px;
-          font-weight:900;
-          white-space:nowrap;
-        ">${badgeTxt}</span>
+        <div style="font-size:12px;font-weight:900;opacity:0.75;">
+          ${total} teritorii • ${urgent} urgente • ${expirat} expirate
+        </div>
       </div>
 
-      <div style="margin-top:6px;font-size:13px;font-weight:700;">
-        Teritoriu: <b>${teritoriu || "-"}</b>
+      <div style="margin-top:8px;font-size:12px;font-weight:800;opacity:0.7;">
+        Status pe fiecare teritoriu:
       </div>
 
-      <div style="margin-top:10px;font-size:34px;font-weight:1000;">
-        <span id="daysCount">0</span> zile
-      </div>
-      <div style="font-size:12px;font-weight:800;opacity:0.7;">
-        (${luni} luni) rămase
-      </div>
-
-      ${msg ? `<div style="margin-top:10px;font-weight:900;">${msg}</div>` : ""}
-
-      <div style="margin-top:12px;height:9px;background:#e0e0e0;border-radius:999px;overflow:hidden;">
-        <div id="daysBar" style="height:100%;width:0%;background:${badgeColor};transition:width 0.9s;"></div>
-      </div>
+      <div id="territoryCards" style="margin-top:12px;display:flex;flex-direction:column;gap:10px;"></div>
     </div>
   `;
 
-  const countEl = document.getElementById("daysCount");
-  const barEl = document.getElementById("daysBar");
+  const listEl = document.getElementById("territoryCards");
 
-  if (countEl) animateNumber(countEl, Math.max(zile, 0));
-  setTimeout(() => {
-    if (barEl) barEl.style.width = pct + "%";
-  }, 120);
+  arr.forEach((item, idx) => {
+    const teritoriu = item.label || "-";
+    const zile = Number(item.zileRamase) || 0;
+    const luni = Math.floor(Math.max(zile, 0) / 30);
+    const pct = Math.min(Math.max((zile / STANDARD_DAYS) * 100, 0), 100);
+
+    let badgeTxt = "OK";
+    let color = "#1e8e3e";
+    let msg = "";
+
+    if (zile <= 0) {
+      badgeTxt = "EXPIRAT";
+      color = "#d93025";
+      msg = "Predă imediat";
+    } else if (zile < 7) {
+      badgeTxt = "URGENT";
+      color = "#d93025";
+      msg = "Foarte puțin timp";
+    } else if (zile <= 30) {
+      badgeTxt = "ATENȚIE";
+      color = "#f9a825";
+      msg = "Finalizează curând";
+    }
+
+    const card = document.createElement("div");
+    card.innerHTML = `
+      <div style="
+        border:1px solid rgba(0,0,0,0.08);
+        border-left:6px solid ${color};
+        border-radius:14px;
+        padding:12px;
+        background:rgba(248,250,253,0.95);
+      ">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div style="font-weight:900;">${teritoriu}</div>
+          <span style="
+            background:${color};
+            color:white;
+            padding:5px 9px;
+            border-radius:999px;
+            font-size:11px;
+            font-weight:900;
+            white-space:nowrap;
+          ">${badgeTxt}</span>
+        </div>
+
+        <div style="margin-top:6px;font-size:14px;font-weight:900;color:${color};">
+          <span id="days-${idx}">0</span> zile <span style="font-size:12px;opacity:0.8;">(${luni} luni)</span>
+        </div>
+
+        ${msg ? `<div style="margin-top:6px;font-size:12px;font-weight:900;opacity:0.75;">${msg}</div>` : ""}
+
+        <div style="margin-top:10px;height:9px;background:#e0e0e0;border-radius:999px;overflow:hidden;">
+          <div id="bar-${idx}" style="height:100%;width:0%;background:${color};transition:width 0.9s;"></div>
+        </div>
+      </div>
+    `;
+
+    listEl.appendChild(card);
+
+    // animăm numărul + bară
+    const countEl = document.getElementById(`days-${idx}`);
+    const barEl = document.getElementById(`bar-${idx}`);
+    if (countEl) animateNumber(countEl, Math.max(zile, 0));
+    setTimeout(() => { if (barEl) barEl.style.width = pct + "%"; }, 120);
+  });
 }
+
 
 /* =========================================================
    MAIN
@@ -223,14 +256,11 @@ if (!k) {
         return;
       }
 
-      const primary = data[0];
+      renderTerritoryStatusList({
+  prenume,
+  items: data
+});
 
-      // card status (folosește primul item ca referință)
-      renderTerritoryStatus({
-        prenume,
-        teritoriu: primary.label,
-        zileRamase: primary.zileRamase
-      });
 
       if (titleEl) titleEl.innerText = `Alege unde vrei să mergi, ${prenume}`;
 
