@@ -284,6 +284,38 @@
     }
   }
 
+  <script>
+  // ... TOT codul tău de mai sus rămâne la fel ...
+
+  function init(){
+    // filtrare locală (fără refresh) — dar doar dacă există elementul
+    const qEl = document.getElementById("q");
+    if (qEl){
+      qEl.addEventListener("input", ()=> renderList(window.__rows));
+    }
+
+    // load inițial
+    refresh();
+
+    // ✅ deschide/închide automat <details> la print
+    window.addEventListener("beforeprint", () => {
+      document.querySelectorAll("details").forEach(d => d.open = true);
+    });
+
+    window.addEventListener("afterprint", () => {
+      document.querySelectorAll("details").forEach(d => d.open = false);
+    });
+
+    // expunem global pentru onclick din HTML
+    window.exportPdf = exportPdf;
+    window.refresh = refresh;
+  }
+
+  // IMPORTANT: pornește doar după ce există DOM-ul
+  document.addEventListener("DOMContentLoaded", init);
+</script>
+
+
   // filtrare locală (fără refresh)
   document.getElementById("q").addEventListener("input", ()=>{
     renderList(window.__rows);
