@@ -396,6 +396,17 @@
     });
 
     window.addEventListener("load", refresh);
+
+    // 🔽 Deschide automat istoricul la print (PDF)
+window.addEventListener("beforeprint", () => {
+  document.querySelectorAll("details").forEach(d => d.open = true);
+});
+
+window.addEventListener("afterprint", () => {
+  document.querySelectorAll("details").forEach(d => d.open = false);
+});
+
+    
   </script>
 </body>
 </html>
