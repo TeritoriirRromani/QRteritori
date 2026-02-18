@@ -249,60 +249,64 @@ if (!k) {
       return r.json();
     })
     .then(data => {
-      stopLoadingUI();
+  stopLoadingUI();
 
-      if (!Array.isArray(data) || !data.length) {
-        if (titleEl) titleEl.innerText = "Nu există linkuri pentru acest cod";
-        return;
-      }
+  if (!Array.isArray(data) || !data.length) {
+    if (titleEl) titleEl.innerText = "Nu există linkuri pentru acest cod";
+    return;
+  }
 
-      renderTerritoryStatusList({
-  prenume,
-  items: data
-});
+  // ✅ definim primary (folosit la redirect când e un singur link)
+  const primary = data[0] || {};
 
+  // ✅ afișăm lista de teritorii în cardul mare
+  renderTerritoryStatusList({
+    prenume,
+    items: data
+  });
 
-      if (titleEl) titleEl.innerText = `Alege unde vrei să mergi, ${prenume}`;
+  if (titleEl) titleEl.innerText = `Alege unde vrei să mergi, ${prenume}`;
 
-      // 1 link -> redirect după puțin timp
-      if (data.length === 1 && primary.url) {
-        if (buttonsEl) buttonsEl.innerHTML = "";
-        if (titleEl) titleEl.innerText = `Se deschide teritoriul, ${prenume}…`;
+  // ✅ 1 link -> redirect după puțin timp
+  if (data.length === 1 && primary.url) {
+    if (buttonsEl) buttonsEl.innerHTML = "";
+    if (titleEl) titleEl.innerText = `Se deschide teritoriul, ${prenume}…`;
 
-        setTimeout(() => {
-          window.location.href = primary.url;
-        }, AUTO_REDIRECT_DELAY_MS);
+    setTimeout(() => {
+      window.location.href = primary.url;
+    }, AUTO_REDIRECT_DELAY_MS);
 
-        return;
-      }
+    return;
+  }
 
-      // mai multe -> butoane cu zile
-      if (buttonsEl) buttonsEl.innerHTML = "";
+  // ✅ mai multe -> butoane cu zile
+  if (buttonsEl) buttonsEl.innerHTML = "";
 
-      data.forEach(item => {
-        const zile = Number(item.zileRamase) || 0;
-        const luni = Math.floor(Math.max(zile, 0) / 30);
+  data.forEach(item => {
+    const zile = Number(item.zileRamase) || 0;
+    const luni = Math.floor(Math.max(zile, 0) / 30);
 
-        let accent = "#1e8e3e";
-        if (zile <= 0 || zile < 7) accent = "#d93025";
-        else if (zile <= 30) accent = "#f9a825";
+    let accent = "#1e8e3e";
+    if (zile <= 0 || zile < 7) accent = "#d93025";
+    else if (zile <= 30) accent = "#f9a825";
 
-        const btn = document.createElement("button");
-        btn.innerHTML = `
-          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
-            <div style="font-weight:800;">${item.label || "Deschide link"}</div>
-            <div style="font-size:12px;font-weight:800;color:${accent};">
-              ${zile} zile (${luni} luni)
-            </div>
-          </div>
-        `;
+    const btn = document.createElement("button");
+    btn.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
+        <div style="font-weight:800;">${item.label || "Deschide link"}</div>
+        <div style="font-size:12px;font-weight:800;color:${accent};">
+          ${zile} zile (${luni} luni)
+        </div>
+      </div>
+    `;
 
-        btn.style.borderLeft = `6px solid ${accent}`;
-        btn.onclick = () => window.location.href = item.url;
+    btn.style.borderLeft = `6px solid ${accent}`;
+    btn.onclick = () => window.location.href = item.url;
 
-        if (buttonsEl) buttonsEl.appendChild(btn);
-      });
-    })
+    if (buttonsEl) buttonsEl.appendChild(btn);
+  });
+})
+)
     .catch(err => {
       console.error(err);
       showErrorUI("Eroare la încărcare (verifică URL / deploy / permisiuni)");
