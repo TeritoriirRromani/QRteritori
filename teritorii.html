@@ -1,3 +1,4 @@
+@@ -1,595 +1,306 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
@@ -267,348 +268,484 @@
   <!-- URL global -->
   <script src="config.js"></script>
 
+  <script>
+    /* =========================================================
+       CONFIG UI
+       ========================================================= */
+    const STANDARD_DAYS = 120;
 
-<script>
-  /* =========================================================
-     CONFIG UI
-     ========================================================= */
-  const STANDARD_DAYS = 120;
+    // cache local ca să nu rechemăm serverul la fiecare tastă
+    window.__rows = [];
 
-  // cache local ca să nu rechemăm serverul la fiecare tastă
-  window.__rows = [];
+    /* =========================================================
+       Helpers
+       ========================================================= */
+    function esc(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
 
-  /* =========================================================
-     Helpers
-     ========================================================= */
-  function esc(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
+    function setStatus(t, cls){
+      const el = document.getElementById("status");
+      el.textContent = t || "";
+      el.className = cls || "";
+    }
 
-  function setStatus(t, cls){
-    const el = document.getElementById("status");
-    if (!el) return;
-    el.textContent = t || "";
-    el.className = cls || "";
-  }
+    function loadJsonp(url){
+      return new Promise((resolve, reject)=>{
+        const s = document.createElement("script");
+        s.src = url;
+        s.onload = ()=>{ s.remove(); resolve(); };
+        s.onerror = ()=>{ s.remove(); reject(new Error("JSONP load failed")); };
+        document.body.appendChild(s);
+      });
+    }
 
-  function loadJsonp(url){
-    return new Promise((resolve, reject)=>{
-      const s = document.createElement("script");
-      s.src = url;
-      s.onload = ()=>{ s.remove(); resolve(); };
-      s.onerror = ()=>{ s.remove(); reject(new Error("JSONP load failed")); };
-      document.body.appendChild(s);
-    });
-  }
+    function renderHistory(historyArr) {
+      if (!Array.isArray(historyArr) || !historyArr.length) return "";
 
-  function renderHistory(historyArr) {
-    if (!Array.isArray(historyArr) || !historyArr.length) return "";
-
-    return historyArr.map(h => {
-      const rows = (h.intrari || []).map(x => `
-        <div class="hist-row">
-          <div class="hist-cell">
-            <div class="hist-head">Dat</div>
-            <div class="hist-val">${esc(x.dat || "-")}</div>
+      return historyArr.map(h => {
+        const rows = (h.intrari || []).map(x => `
+          <div class="hist-row">
+            <div class="hist-cell">
+              <div class="hist-head">Dat</div>
+              <div class="hist-val">${esc(x.dat || "-")}</div>
+            </div>
+            <div class="hist-cell">
+              <div class="hist-head">Predat</div>
+              <div class="hist-val">${esc(x.predat || "-")}</div>
+            </div>
           </div>
-          <div class="hist-cell">
-            <div class="hist-head">Predat</div>
-            <div class="hist-val">${esc(x.predat || "-")}</div>
+        `).join("");
+
+        return `
+          <div class="hist-block">
+            <div class="hist-name">${esc(h.nume || "—")}</div>
+            ${rows}
           </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
+    }
 
-      return `
-        <div class="hist-block">
-          <div class="hist-name">${esc(h.nume || "—")}</div>
-          ${rows}
-        </div>
-      `;
-    }).join("");
-  }
+    function formatDeadline(t) {
+      // t.dataLimita + (zileRamase)
+      if (!t.dataLimita) return "—";
 
-  function formatDeadline(row) {
-    if (!row.dataLimita) return "—";
-    const z = Number(row.zileRamase);
-    if (isNaN(z)) return esc(row.dataLimita);
-    if (z < 0) return `${esc(row.dataLimita)} (expirat de ${Math.abs(z)} zile)`;
-    return `${esc(row.dataLimita)} (${z} zile)`;
-  }
+      const z = Number(t.zileRamase);
+      if (isNaN(z)) return esc(t.dataLimita);
 
-  /* =========================================================
-     PDF helpers (RAPORT)
-     ========================================================= */
-  function getStatusInfo(row){
-    const esteActiv = !!row.frateCurent;
-    const z = (row.zileRamase === null || row.zileRamase === undefined) ? null : Number(row.zileRamase);
 
-    if (!esteActiv) return { txt: "LIBER", cls: "pdf-s-free" };
-    if (z !== null && z <= 0) return { txt: "EXPIRAT", cls: "pdf-s-urg" };
-    if (z !== null && z < 7) return { txt: "URGENT", cls: "pdf-s-urg" };
-    if (z !== null && z <= 30) return { txt: "ATENȚIE", cls: "pdf-s-warn" };
-    return { txt: "OK", cls: "pdf-s-ok" };
-  }
 
-  function formatDeadlinePdf(row){
-    if (!row.dataLimita) return "—";
-    const z = Number(row.zileRamase);
-    if (isNaN(z)) return esc(row.dataLimita);
-    if (z < 0) return `${esc(row.dataLimita)} (expirat de ${Math.abs(z)} zile)`;
-    return `${esc(row.dataLimita)} (${z} zile)`;
-  }
 
-  function buildPdfReport(rows){
-    const r = Array.isArray(rows) ? rows : [];
 
-    const total = r.length;
-    const active = r.filter(x => !!x.frateCurent).length;
-    const free = total - active;
 
-    const urgent = r.filter(x => {
-      const z = Number(x.zileRamase);
-      return !!x.frateCurent && !isNaN(z) && z > 0 && z < 7;
-    }).length;
 
-    const expired = r.filter(x => {
-      const z = Number(x.zileRamase);
-      return !!x.frateCurent && !isNaN(z) && z <= 0;
-    }).length;
 
-    const stamp = new Date().toLocaleString("ro-RO");
 
-    const rowsHtml = r.map(row => {
-      const s = getStatusInfo(row);
 
-      return `
-        <tr>
-          <td><b>${esc(row.teritoriu || "")}</b></td>
-          <td><span class="pdf-status ${s.cls}">${s.txt}</span></td>
-          <td>${esc(row.frateCurent || "—")}</td>
-          <td>${esc(row.dataAtribuireCurenta || "—")}</td>
-          <td>${!!row.frateCurent ? formatDeadlinePdf(row) : "—"}</td>
-          <td style="text-align:right;">${(row.zileRamase===null || row.zileRamase===undefined) ? "—" : esc(String(row.zileRamase))}</td>
-        </tr>
-      `;
-    }).join("");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      if (z < 0) return `${esc(t.dataLimita)} (expirat de ${Math.abs(z)} zile)`;
+      return `${esc(t.dataLimita)} (${z} zile)`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+    /* =========================================================
+       Render list (filtrare + sort alfabetică)
+       ========================================================= */
+    function renderList(rows){
+      const list = document.getElementById("list");
+      const info = document.getElementById("info");
+      const q = (document.getElementById("q").value || "").toLowerCase().trim();
+
+      const arr = Array.isArray(rows) ? rows : [];
+      info.textContent = "Teritorii: " + arr.length;
+
+      const filtered = q
+        ? arr.filter(r =>
+            (r.teritoriu || "").toLowerCase().includes(q) ||
+            (r.frateCurent || "").toLowerCase().includes(q)
+          )
+        : arr;
+
+      if (!filtered.length){
+        list.innerHTML = `<div class="card">Nu există rezultate.</div>`;
+        return;
+      }
+
+      function getStatusInfo(row){
+  const esteActiv = !!row.frateCurent;
+  const z = (row.zileRamase === null || row.zileRamase === undefined) ? null : Number(row.zileRamase);
+
+  if (!esteActiv) return { txt: "LIBER", cls: "pdf-s-free" };
+
+  if (z !== null && z <= 0) return { txt: "EXPIRAT", cls: "pdf-s-urg" };
+  if (z !== null && z < 7) return { txt: "URGENT", cls: "pdf-s-urg" };
+  if (z !== null && z <= 30) return { txt: "ATENȚIE", cls: "pdf-s-warn" };
+
+  return { txt: "OK", cls: "pdf-s-ok" };
+}
+
+function formatDeadlinePdf(row){
+  if (!row.dataLimita) return "—";
+  const z = Number(row.zileRamase);
+  if (isNaN(z)) return esc(row.dataLimita);
+  if (z < 0) return `${esc(row.dataLimita)} (expirat de ${Math.abs(z)} zile)`;
+  return `${esc(row.dataLimita)} (${z} zile)`;
+}
+
+function buildPdfReport(rows){
+  const r = Array.isArray(rows) ? rows : [];
+
+  const total = r.length;
+  const active = r.filter(x => !!x.frateCurent).length;
+  const free = total - active;
+  const urgent = r.filter(x => {
+    const z = Number(x.zileRamase);
+    return !!x.frateCurent && !isNaN(z) && z > 0 && z < 7;
+  }).length;
+  const expired = r.filter(x => {
+    const z = Number(x.zileRamase);
+    return !!x.frateCurent && !isNaN(z) && z <= 0;
+  }).length;
+
+  const now = new Date();
+  const stamp = now.toLocaleString("ro-RO");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const rowsHtml = r.map(row => {
+    const s = getStatusInfo(row);
+
 
     return `
-      <div class="pdf-title">Raport teritorii</div>
-      <div class="pdf-sub">Generat: ${esc(stamp)}</div>
-
-      <div class="pdf-summary">
-        <div class="pdf-box"><div class="k">TOTAL</div><div class="v">${total}</div></div>
-        <div class="pdf-box"><div class="k">ACTIVE</div><div class="v">${active}</div></div>
-        <div class="pdf-box"><div class="k">LIBERE</div><div class="v">${free}</div></div>
-        <div class="pdf-box"><div class="k">URGENTE</div><div class="v">${urgent}</div></div>
-        <div class="pdf-box"><div class="k">EXPIRATE</div><div class="v">${expired}</div></div>
-      </div>
-
-      <table class="pdf-table">
-        <thead>
-          <tr>
-            <th>Teritoriu</th>
-            <th>Status</th>
-            <th>Frate</th>
-            <th>Data atribuire</th>
-            <th>Limită</th>
-            <th>Zile</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-      </table>
+      <tr>
+        <td><b>${esc(row.teritoriu || "")}</b></td>
+        <td><span class="pdf-status ${s.cls}">${s.txt}</span></td>
+        <td>${esc(row.frateCurent || "—")}</td>
+        <td>${esc(row.dataAtribuireCurenta || "—")}</td>
+        <td>${!!row.frateCurent ? formatDeadlinePdf(row) : "—"}</td>
+        <td style="text-align:right;">${(row.zileRamase===null || row.zileRamase===undefined) ? "—" : esc(String(row.zileRamase))}</td>
+      </tr>
     `;
-  }
+  }).join("");
 
-  // ✅ export PDF real (raportul prestabilit)
-  function exportPdf(){
-    const el = document.getElementById("pdfReport");
-    if (!el) return;
+  return `
+    <div class="pdf-title">Raport teritorii</div>
+    <div class="pdf-sub">Generat: ${esc(stamp)}</div>
 
-    el.innerHTML = buildPdfReport(window.__rows);
-    window.print();
-  }
+    <div class="pdf-summary">
+      <div class="pdf-box"><div class="k">TOTAL</div><div class="v">${total}</div></div>
+      <div class="pdf-box"><div class="k">ACTIVE</div><div class="v">${active}</div></div>
+      <div class="pdf-box"><div class="k">LIBERE</div><div class="v">${free}</div></div>
+      <div class="pdf-box"><div class="k">URGENTE</div><div class="v">${urgent}</div></div>
+      <div class="pdf-box"><div class="k">EXPIRATE</div><div class="v">${expired}</div></div>
+    </div>
 
-  /* =========================================================
-     Render list (filtrare locală)
-     ========================================================= */
-  function renderList(rows){
-    const list = document.getElementById("list");
-    const info = document.getElementById("info");
-    const q = (document.getElementById("q").value || "").toLowerCase().trim();
+    <table class="pdf-table">
+      <thead>
+        <tr>
+          <th>Teritoriu</th>
+          <th>Status</th>
+          <th>Frate</th>
+          <th>Data atribuire</th>
+          <th>Limită</th>
+          <th>Zile</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+  `;
+}
 
-    const arr = Array.isArray(rows) ? rows : [];
-    if (info) info.textContent = "Teritorii: " + arr.length;
+function exportPdf(){
+  // construim raportul din cache (fără call la server)
+  const el = document.getElementById("pdfReport");
+  if (!el) return;
 
-    const filtered = q
-      ? arr.filter(r =>
-          (r.teritoriu || "").toLowerCase().includes(q) ||
-          (r.frateCurent || "").toLowerCase().includes(q)
-        )
-      : arr;
+  el.innerHTML = buildPdfReport(window.__rows);
 
-    if (!filtered.length){
-      list.innerHTML = `<div class="card">Nu există rezultate.</div>`;
-      return;
-    }
+  // Print -> @media print ascunde UI și arată doar raportul
+  window.print();
+}
 
-    list.innerHTML = "";
 
-    filtered.forEach(r=>{
-      const esteActiv = !!r.frateCurent;
+      // ✅ sortare alfabetică după teritoriu
+      // filtered.sort((a,b)=> String(a.teritoriu||"").localeCompare(String(b.teritoriu||""), "ro"));
 
-      const zile = (r.zileRamase === null || r.zileRamase === undefined) ? null : Number(r.zileRamase);
-      const pct = (zile === null) ? 0 : Math.min(Math.max((zile / STANDARD_DAYS) * 100, 0), 100);
+      list.innerHTML = "";
 
-      let badge = "b-free", badgeTxt = "LIBER", color="#365f9c";
+      filtered.forEach(r=>{
+        const esteActiv = !!r.frateCurent;
 
-      if (esteActiv){
-        badge = "b-ok"; badgeTxt = "OK"; color="#1e8e3e";
-        if (zile !== null && zile <= 0) { badge="b-urgent"; badgeTxt="EXPIRAT"; color="#d93025"; }
-        else if (zile !== null && zile < 7) { badge="b-urgent"; badgeTxt="URGENT"; color="#d93025"; }
-        else if (zile !== null && zile <= 30) { badge="b-warn"; badgeTxt="ATENȚIE"; color="#f9a825"; }
-      }
+        const zile = (r.zileRamase === null || r.zileRamase === undefined) ? null : Number(r.zileRamase);
+        const pct = (zile === null) ? 0 : Math.min(Math.max((zile / STANDARD_DAYS) * 100, 0), 100);
 
-      const la = r.lastAssignment || null;
-      const lastLine = (!esteActiv && la && (la.nume || la.dat || la.predat))
-        ? `${esc(la.nume || "—")} • ${esc(la.dat || "—")} → ${esc(la.predat || "—")}`
-        : "";
+        // badge + color
+        let badge = "b-free", badgeTxt = "LIBER", color="#365f9c";
 
-      const hist = Array.isArray(r.history) ? r.history : [];
+        if (esteActiv){
+          badge = "b-ok"; badgeTxt = "OK"; color="#1e8e3e";
+          if (zile !== null && zile <= 0) { badge="b-urgent"; badgeTxt="EXPIRAT"; color="#d93025"; }
+          else if (zile !== null && zile < 7) { badge="b-urgent"; badgeTxt="URGENT"; color="#d93025"; }
+          else if (zile !== null && zile <= 30) { badge="b-warn"; badgeTxt="ATENȚIE"; color="#f9a825"; }
+        }
 
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="row">
-          <div>
-            <div class="label">Teritoriu</div>
-            <div class="val">${esc(r.teritoriu)} <span class="badge ${badge}">${badgeTxt}</span></div>
+        // pentru LIBER: ultima atribuire (opțional)
+        const la = r.lastAssignment || null;
+        const lastLine = (!esteActiv && la && (la.nume || la.dat || la.predat))
+          ? `${esc(la.nume || "—")} • ${esc(la.dat || "—")} → ${esc(la.predat || "—")}`
+          : "";
 
-            ${lastLine ? `
-              <div class="label" style="margin-top:6px;">Ultima dată</div>
-              <div class="val" style="font-weight:700; opacity:.9;">${lastLine}</div>
-            ` : ""}
-          </div>
+        const hist = Array.isArray(r.history) ? r.history : [];
 
-          <div>
-            <div class="label">Frate curent</div>
-            <div class="val">${esc(r.frateCurent || "—")}</div>
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="row">
+            <div>
+              <div class="label">Teritoriu</div>
+              <div class="val">${esc(r.teritoriu)} <span class="badge ${badge}">${badgeTxt}</span></div>
 
-            <div class="label" style="margin-top:6px;">Data atribuirii</div>
-            <div class="val">${esc(r.dataAtribuireCurenta || "—")}</div>
-          </div>
-
-          <div>
-            <div class="label">Limită</div>
-            <div class="val" style="color:${color};">
-              ${esteActiv ? formatDeadline(r) : "—"}
+              ${lastLine ? `
+                <div class="label" style="margin-top:6px;">Ultima dată</div>
+                <div class="val" style="font-weight:700; opacity:.9;">${lastLine}</div>
+              ` : ""}
             </div>
 
-            <div class="progress">
-              <div class="bar" style="background:${color}; width:${pct}%;"></div>
+            <div>
+              <div class="label">Frate curent</div>
+              <div class="val">${esc(r.frateCurent || "—")}</div>
+
+              <div class="label" style="margin-top:6px;">Data atribuirii</div>
+              <div class="val">${esc(r.dataAtribuireCurenta || "—")}</div>
+
+
+            </div>
+
+            <div>
+              <div class="label">Limită</div>
+              <div class="val" style="color:${color};">
+                ${esteActiv ? formatDeadline(r) : "—"}
+              </div>
+
+              <div class="progress">
+                <div class="bar" style="background:${color}; width:${pct}%;"></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        ${hist.length ? `
-          <details>
-            <summary>Istoric (${hist.length})</summary>
-            ${renderHistory(hist)}
-          </details>
-        ` : ""}
-      `;
 
-      list.appendChild(card);
-    });
-  }
+          ${hist.length ? `
+            <details>
+              <summary>Istoric (${hist.length})</summary>
+              ${renderHistory(hist)}
+            </details>
+          ` : ""}
+        `;
 
-  /* =========================================================
-     JSONP callback
-     ========================================================= */
-  window.populateTeritorii = function(rows){
-    window.__rows = Array.isArray(rows) ? rows : [];
-    renderList(window.__rows);
-  };
+        list.appendChild(card);
+      });
+    }
 
-  /* =========================================================
-     Actions
-     ========================================================= */
-  async function refresh(){
-    setStatus("", "");
-    document.getElementById("list").innerHTML = `<div class="card">Se încarcă…</div>`;
+    /* =========================================================
+       JSONP callback
+       ========================================================= */
+    window.populateTeritorii = function(rows){
+      window.__rows = Array.isArray(rows) ? rows : [];
+      renderList(window.__rows);
+    };
 
-    try{
-      if (typeof SCRIPT_URL === "undefined" || !SCRIPT_URL) {
-        throw new Error("SCRIPT_URL lipsește (verifică config.js)");
+    /* =========================================================
+       Actions
+       ========================================================= */
+    async function refresh(){
+      setStatus("", "");
+      document.getElementById("list").innerHTML = `<div class="card">Se încarcă…</div>`;
+
+      try{
+        if (typeof SCRIPT_URL === "undefined" || !SCRIPT_URL) {
+          throw new Error("SCRIPT_URL lipsește (verifică config.js)");
+        }
+
+        // IMPORTANT: action trebuie să fie EXACT "teritorii" în doGet
+        await loadJsonp(SCRIPT_URL + "?action=teritorii&callback=populateTeritorii");
+      } catch(e){
+        setStatus("Eroare la încărcare: " + e.message, "error");
+        document.getElementById("list").innerHTML = `<div class="card">Eroare la încărcare.</div>`;
       }
-      await loadJsonp(SCRIPT_URL + "?action=teritorii&callback=populateTeritorii");
-    } catch(e){
-      setStatus("Eroare la încărcare: " + (e.message || e), "error");
-      document.getElementById("list").innerHTML = `<div class="card">Eroare la încărcare.</div>`;
-    }
-  }
 
-  <script>
-  // ... TOT codul tău de mai sus rămâne la fel ...
 
-  function init(){
-    // filtrare locală (fără refresh) — dar doar dacă există elementul
-    const qEl = document.getElementById("q");
-    if (qEl){
-      qEl.addEventListener("input", ()=> renderList(window.__rows));
+
+
     }
 
-    // load inițial
-    refresh();
 
-    // ✅ deschide/închide automat <details> la print
-    window.addEventListener("beforeprint", () => {
-      document.querySelectorAll("details").forEach(d => d.open = true);
+    function exportPdf(){
+      window.print();
+    }
+
+    // filtrare locală (fără refresh)
+    document.getElementById("q").addEventListener("input", ()=>{
+      renderList(window.__rows);
     });
 
-    window.addEventListener("afterprint", () => {
-      document.querySelectorAll("details").forEach(d => d.open = false);
-    });
+    window.addEventListener("load", refresh);
 
-    // expunem global pentru onclick din HTML
-    window.exportPdf = exportPdf;
-    window.refresh = refresh;
-  }
+    // 🔽 Deschide automat istoricul la print (PDF)
+window.addEventListener("beforeprint", () => {
+  document.querySelectorAll("details").forEach(d => d.open = true);
+});
 
-  // IMPORTANT: pornește doar după ce există DOM-ul
-  document.addEventListener("DOMContentLoaded", init);
-</script>
+window.addEventListener("afterprint", () => {
+  document.querySelectorAll("details").forEach(d => d.open = false);
+});
 
+    
+  </script>
 
-  // filtrare locală (fără refresh)
-  document.getElementById("q").addEventListener("input", ()=>{
-    renderList(window.__rows);
-  });
-
-  window.addEventListener("load", refresh);
-
-  // ✅ deschide/închide automat <details> la print
-  window.addEventListener("beforeprint", () => {
-    document.querySelectorAll("details").forEach(d => d.open = true);
-  });
-
-  window.addEventListener("afterprint", () => {
-    document.querySelectorAll("details").forEach(d => d.open = false);
-  });
-
-  // expunem exportPdf global ca să meargă onclick din buton
-  window.exportPdf = exportPdf;
-  window.refresh = refresh;
-</script>
- 
   <!-- RAPORT PDF (ascuns pe ecran) -->
 <div id="pdfReport" class="pdf-report" style="display:none;"></div>
 
+
+
+
+
+
+
+  
 </body>
 </html>
