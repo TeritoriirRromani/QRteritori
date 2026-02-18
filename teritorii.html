@@ -116,6 +116,53 @@
       .form-container { box-shadow:none !important; border:none !important; }
       .card { page-break-inside: avoid; }
     }
+
+    .hist-block{
+  border:1px solid rgba(0,0,0,0.08);
+  border-radius:14px;
+  padding:12px;
+  background:rgba(248,250,253,0.95);
+  margin-top:10px;
+}
+
+.hist-name{
+  text-align:center;
+  font-weight:900;
+  margin-bottom:10px;
+}
+
+.hist-row{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+  padding:10px 0;
+  border-top:1px dashed rgba(0,0,0,0.12);
+}
+
+.hist-row:first-of-type{
+  border-top:none;
+  padding-top:0;
+}
+
+.hist-cell{
+  text-align:center;
+}
+
+.hist-head{
+  font-size:11px;
+  font-weight:900;
+  opacity:0.65;
+  margin-bottom:4px;
+}
+
+.hist-val{
+  font-size:13px;
+  font-weight:900;
+}
+
+
+
+    
   </style>
 </head>
 
@@ -178,6 +225,44 @@
       el.textContent = t || "";
       el.className = cls || "";
     }
+
+    function renderHistory(historyArr) {
+  if (!Array.isArray(historyArr) || !historyArr.length) return "";
+
+  return historyArr.map(h => {
+    const rows = (h.intrari || []).map(x => `
+      <div class="hist-row">
+        <div class="hist-cell">
+          <div class="hist-head">Dat</div>
+          <div class="hist-val">${x.dat || "-"}</div>
+        </div>
+        <div class="hist-cell">
+          <div class="hist-head">Predat</div>
+          <div class="hist-val">${x.predat || "-"}</div>
+        </div>
+      </div>
+    `).join("");
+
+    return `
+      <div class="hist-block">
+        <div class="hist-name">${h.nume}</div>
+        ${rows}
+      </div>
+    `;
+  }).join("");
+}
+
+    function formatDeadline(t) {
+  if (!t.dataLimita) return "-";
+
+  const z = Number(t.zileRamase);
+  if (isNaN(z)) return t.dataLimita;
+
+  if (z < 0) return `${t.dataLimita} (expirat de ${Math.abs(z)} zile)`;
+  return `${t.dataLimita} (${z} zile)`;
+}
+
+
 
     function loadJsonp(url){
       return new Promise((resolve, reject)=>{
