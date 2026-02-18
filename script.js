@@ -104,7 +104,6 @@ function animateNumber(el, target) {
    ========================================================= */
 
 function renderTerritoryStatusList({ prenume, items }) {
-
   // mount deasupra butoanelor
   let mount = document.getElementById("territoryStatus");
   if (!mount) {
@@ -117,37 +116,37 @@ function renderTerritoryStatusList({ prenume, items }) {
     }
   }
 
-  // sortăm: cele mai urgente primele (zile mici)
   const arr = Array.isArray(items) ? [...items] : [];
+
+  // sortăm de la cel mai urgent la cel mai "lejer"
   arr.sort((a, b) => (Number(a.zileRamase) || 0) - (Number(b.zileRamase) || 0));
 
-  // sumar
+  // sumar sus
   const total = arr.length;
-  const urgent = arr.filter(x => (Number(x.zileRamase) || 0) > 0 && (Number(x.zileRamase) || 0) < 7).length;
+  const urgent = arr.filter(x => {
+    const z = Number(x.zileRamase) || 0;
+    return z > 0 && z < 7;
+  }).length;
   const expirat = arr.filter(x => (Number(x.zileRamase) || 0) <= 0).length;
 
-  // construim cardul mare + mini-carduri
   mount.innerHTML = `
     <div style="
-      margin:14px auto 14px auto;
+      margin:14px auto 18px auto;
       max-width:520px;
       border-radius:18px;
       padding:16px;
       background:white;
       box-shadow:0 10px 28px rgba(0,0,0,0.08);
+      text-align:left;
     ">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
         <div style="font-weight:900;">Salut, ${prenume || ""}!</div>
         <div style="font-size:12px;font-weight:900;opacity:0.75;">
           ${total} teritorii • ${urgent} urgente • ${expirat} expirate
         </div>
       </div>
 
-      <div style="margin-top:8px;font-size:12px;font-weight:800;opacity:0.7;">
-        Status pe fiecare teritoriu:
-      </div>
-
-      <div id="territoryCards" style="margin-top:12px;display:flex;flex-direction:column;gap:10px;"></div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;" id="territoryCards"></div>
     </div>
   `;
 
@@ -200,7 +199,8 @@ function renderTerritoryStatusList({ prenume, items }) {
         </div>
 
         <div style="margin-top:6px;font-size:14px;font-weight:900;color:${color};">
-          <span id="days-${idx}">0</span> zile <span style="font-size:12px;opacity:0.8;">(${luni} luni)</span>
+          <span id="days-${idx}">0</span> zile
+          <span style="font-size:12px;opacity:0.8;">(${luni} luni)</span>
         </div>
 
         ${msg ? `<div style="margin-top:6px;font-size:12px;font-weight:900;opacity:0.75;">${msg}</div>` : ""}
@@ -213,7 +213,7 @@ function renderTerritoryStatusList({ prenume, items }) {
 
     listEl.appendChild(card);
 
-    // animăm numărul + bară
+    // animăm numărul + bara
     const countEl = document.getElementById(`days-${idx}`);
     const barEl = document.getElementById(`bar-${idx}`);
     if (countEl) animateNumber(countEl, Math.max(zile, 0));
