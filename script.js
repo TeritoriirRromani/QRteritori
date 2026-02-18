@@ -255,11 +255,9 @@ if (!k) {
         if (titleEl) titleEl.innerText = "Nu există linkuri pentru acest cod";
         return;
       }
+      const primary = data[0] || {};
+      renderTerritoryStatusList({ prenume, items: data });
 
-      renderTerritoryStatusList({
-  prenume,
-  items: data
-});
       if (titleEl) titleEl.innerText = `Alege unde vrei să mergi, ${prenume}`;
 
       // 1 link -> redirect după puțin timp
