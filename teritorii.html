@@ -233,14 +233,13 @@ function flattenHistory(row){
 }
 
 // Construiește raportul PDF “Istoric pe teritorii”
-function buildPdfHistoryReport(rows, cols){
+function buildPdfHistoryReport(rows){
   const r = Array.isArray(rows) ? rows : [];
   const stamp = new Date().toLocaleString("ro-RO");
-  const ncols = Number(cols) || 5; // 5 sau 10
 
   const cards = r.map(row => {
     const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
-    const entries = flattenHistory(row);
+    const entries = flattenHistory(row); // trebuie să returneze [{nume,dat,predat}, ...]
 
     const body = entries.length
       ? entries.map(e => `
@@ -269,26 +268,21 @@ function buildPdfHistoryReport(rows, cols){
               <th>Predat</th>
             </tr>
           </thead>
-          <tbody>
-            ${body}
-          </tbody>
+          <tbody>${body}</tbody>
         </table>
       </div>
     `;
   }).join("");
 
   return `
-  <div class="pdf-history">
-    <div class="pdf-page">
+    <div class="pdf-history">
       <div class="pdf-history-title">Raport istoric teritorii</div>
-      <div class="pdf-history-sub">Generat: ${esc(stamp)} • Coloane: ${ncols}</div>
-
-      <div class="pdf-grid" style="--cols:${ncols}">
+      <div class="pdf-history-sub">Generat: ${esc(stamp)}</div>
+      <div class="pdf-grid">
         ${cards}
       </div>
     </div>
-  </div>
-`;
+  `;
 }
 
 
@@ -362,6 +356,12 @@ function buildPdfHistoryReport(rows, cols){
       if (z < 0) return `${esc(row.dataLimita)} (expirat de ${Math.abs(z)} zile)`;
       return `${esc(row.dataLimita)} (${z} zile)`;
     }
+
+    function setPdfCols(cols){
+  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
+  document.body.classList.add(cols === 10 ? "pdf-cols-10" : "pdf-cols-5");
+}
+
 
     function buildPdfReport(rows){
       const r = Array.isArray(rows) ? rows : [];
@@ -535,17 +535,22 @@ function buildPdfHistoryReport(rows, cols){
     }
 
 function exportPdf(){
+  const cols = (prompt("Câte teritorii pe rând? (5 sau 10)", "5") === "10") ? 10 : 5;
+
+  setPdfCols(cols);
+
   const el = document.getElementById("pdfReport");
   if (!el) return;
 
-  // Alege 5 sau 10:
-  // - dacă vrei 10, pune 10 aici
-  // - sau poți face un prompt, vezi mai jos
-  //const COLS = 5;
-  const COLS = (prompt("Câte teritorii pe rând? (5 sau 10)", "5") === "10") ? 10 : 5;
-  el.innerHTML = buildPdfHistoryReport(window.__rows, COLS);
+  el.innerHTML = buildPdfHistoryReport(window.__rows);
+
   window.print();
 }
+
+// după print curățăm clasa
+window.addEventListener("afterprint", () => {
+  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
+});
 
 
     // căutare locală fără refresh
@@ -558,8 +563,7 @@ function exportPdf(){
       document.querySelectorAll("details").forEach(d => d.open = true);
     });
 window.addEventListener("afterprint", () => {
-  document.body.classList.remove("pdf-cols-10");
-  document.querySelectorAll("details").forEach(d => d.open = false);
+  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
 });
 
 
