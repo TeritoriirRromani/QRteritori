@@ -149,3 +149,8 @@
   body.pdf-cols-10 .pdf-entry .n{ font-size: 6.0pt; }
   body.pdf-cols-10 .pdf-entry .v{ font-size: 5.8pt; }
 }
+body.pdf-mode .teritorii-grid {
+  display: grid;
+  grid-template-columns: repeat(attr(data-cols number), 1fr);
+  gap: 6px;
+}
