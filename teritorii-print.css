@@ -19,12 +19,14 @@
   #pdfReport { display: block !important; }
 
   /* să folosească lățimea completă a paginii */
-  .pdf-report {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
+.pdf-report{
+  margin: 0;              /* nu mai centrează */
+  padding: 0;
+  background: white;
+  color: black;
+  width: 100%;
+}
+
 
   /* HEADER raport */
   .pdf-header {
