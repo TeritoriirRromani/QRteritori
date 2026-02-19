@@ -6,7 +6,10 @@
   <title>Teritorii</title>
 
   <link rel="stylesheet" href="introducere-style.css">
+  <link rel="stylesheet" href="teritorii-print.css" media="print">
   <link rel="stylesheet" href="teritorii.css">
+
+
 </head>
 
 <body>
@@ -166,56 +169,83 @@
       document.body.classList.add(cols === 10 ? "pdf-cols-10" : "pdf-cols-5");
     }
 
-    function buildPdfHistoryReport(rows){
-      const r = Array.isArray(rows) ? rows : [];
+    function zoneClass(teritoriu){
+  const t = String(teritoriu || "").toLowerCase();
 
-      const cards = r.map(row => {
-        const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
-        const entries = flattenHistory(row);
+  // ajustează cum vrei tu aici (ex: “zalau 1”, “ortelec 3”, etc)
+  if (t.includes("zalau")) return "pdf-zone-zalau";
+  if (t.includes("ortelec")) return "pdf-zone-ortelec";
+  return "pdf-zone-alta";
+}
 
-        const body = entries.length
-          ? entries.map(e => `
-              <div class="pdf-entry">
-                <div class="n">${esc(e.nume || "—")}</div>
-                <div class="dp">
-                  <div>
-                    <div class="k">Dat</div>
-                    <div class="v">${esc(e.dat || "—")}</div>
-                  </div>
-                  <div>
-                    <div class="k">Predat</div>
-                    <div class="v">${esc(e.predat || "—")}</div>
-                  </div>
-                </div>
+   // ISTORIC: îl vrem în ordine cronologică (prima -> ultima)
+// tu ai zis că vrei “toate dățile” + la ultima dacă nu e predat => "-"
+function buildPdfHistoryReport(rows, titleText){
+  const r = Array.isArray(rows) ? rows : [];
+  const stamp = new Date().toLocaleString("ro-RO");
+  const title = titleText || "Teritorii Zalău Centru Rromani";
+
+  const cards = r.map(row => {
+    const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
+    const entries = flattenHistory(row); // din codul tău (returnează [{nume,dat,predat}...])
+
+    const body = entries.length
+      ? entries.map(e => `
+          <div class="pdf-entry">
+            <div class="n">${esc(e.nume || "—")}</div>
+            <div class="dp">
+              <div>
+                <div class="k">Dat</div>
+                <div class="v">${esc(e.dat || "—")}</div>
               </div>
-            `).join("")
-          : `<div class="pdf-entry" style="opacity:.75;">Fără istoric</div>`;
-
-        return `
-          <div class="pdf-ter">
-            <h3>${esc(teritoriu)}</h3>
-            ${body}
+              <div>
+                <div class="k">Predat</div>
+                <div class="v">${esc(e.predat || "—")}</div>
+              </div>
+            </div>
           </div>
-        `;
-      }).join("");
+        `).join("")
+      : `<div class="pdf-entry" style="opacity:.75;">Fără istoric</div>`;
 
-      return `<div class="pdf-grid">${cards}</div>`;
-    }
+    return `
+      <div class="pdf-ter ${zoneClass(teritoriu)}">
+        <h3>${esc(teritoriu)}</h3>
+        ${body}
+      </div>
+    `;
+  }).join("");
 
-    function exportPdf(){
-      const cols = (prompt("Câte teritorii pe rând? (5 sau 10)", "5") === "10") ? 10 : 5;
-      setPdfCols(cols);
+  return `
+    <div class="pdf-report">
+      <div class="pdf-header">
+        <div class="pdf-title">${esc(title)}</div>
+        <div class="pdf-date">${esc(stamp)}</div>
+      </div>
 
-      const el = document.getElementById("pdfReport");
-      if (!el) return;
+      <div class="pdf-grid">
+        ${cards}
+      </div>
+         </div>
+  `;
+}
 
-      el.innerHTML = buildPdfHistoryReport(window.__rows);
-      window.print();
-    }
+function exportPdf(){
+  const cols = (prompt("Câte teritorii pe rând? (5 sau 10)", "5") === "10") ? 10 : 5;
+  setPdfCols(cols);
 
-    window.addEventListener("afterprint", () => {
-      document.body.classList.remove("pdf-cols-5","pdf-cols-10");
-    });
+  const el = document.getElementById("pdfReport");
+  if (!el) return;
+
+  // titlul tău fix:
+  el.innerHTML = buildPdfHistoryReport(window.__rows, "Teritorii Zalău Centru Rromani");
+
+  window.print();
+}
+
+// curățăm clasa după print
+window.addEventListener("afterprint", () => {
+  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
+});
 
     /* ========= UI list ========= */
     function renderList(rows){
