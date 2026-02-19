@@ -105,34 +105,100 @@
 }
 
 @media print{
-  @page { size: A4; margin: 8mm; }
+  /* margini cât mai mici (atenție: browserul poate impune minim) */
+  @page { size: A4; margin: 4mm; }
 
   .form-container, .bottom-nav, .page-info { display:none !important; }
   #pdfReport { display:block !important; }
 
+  /* GRID: fără gap => lipite */
   .pdf-grid{
     display:grid;
-    gap: 6mm;
+    gap: 0 !important;
+    width: 100%;
   }
 
+  /* 5 sau 10 pe rând, dar să încapă textul: */
   body.pdf-cols-5  .pdf-grid{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
   body.pdf-cols-10 .pdf-grid{ grid-template-columns: repeat(10, minmax(0, 1fr)); }
 
+  /* pătrățel: fără margini între ele */
   .pdf-ter{
-    border: 1px solid #ddd;
-    border-radius: 3mm;
-    padding: 3mm;
+    border: 0.3mm solid #bbb;
+    border-radius: 0 !important;     /* ca să se “lipească” perfect */
+    padding: 1.2mm;                  /* mic */
+    margin: 0 !important;
     break-inside: avoid;
     page-break-inside: avoid;
+
+    /* IMPORTANT pt text care iese: */
+    overflow: hidden;                /* nu mai iese în afară */
   }
 
-  /* compact doar pentru 10 coloane, dar tot PORTRET */
-  body.pdf-cols-10 .pdf-ter{ padding: 1.5mm; border-radius: 2mm; }
-  body.pdf-cols-10 .pdf-ter h3{ font-size: 7pt; margin: 0 0 1mm 0; padding-bottom: 1mm; }
-  body.pdf-cols-10 .pdf-mini{ font-size: 6pt; }
-  body.pdf-cols-10 .pdf-mini th,
-  body.pdf-cols-10 .pdf-mini td{ padding: 0.8mm 0.4mm; }
+  /* header teritoriu centrat */
+  .pdf-ter h3{
+    text-align:center;
+    font-size: 8pt;
+    margin: 0 0 1mm 0;
+    padding: 0 0 1mm 0;
+    border-bottom: 0.2mm solid #ddd;
+  }
+
+  /* tabel mic */
+  .pdf-mini{
+    width:100%;
+    border-collapse: collapse;
+    font-size: 6.7pt;
+  }
+
+  .pdf-mini th, .pdf-mini td{
+    border-top: 0.2mm solid #eee;
+    padding: 0.8mm 0.5mm;
+    vertical-align: top;
+
+    /* FIX pt text care iese */
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .pdf-mini thead{ display:none; } /* scoatem headerul Nume/Dat/Predat ca mănâncă spațiu */
+
+  /* rând “stil telefon”: nume pe mijloc, sub el Dat/Predat */
+  .pdf-entry{
+    text-align:center;
+    padding: 0.8mm 0;
+    border-top: 0.2mm solid #eee;
+  }
+  .pdf-entry:first-child{ border-top:none; }
+
+  .pdf-entry .n{
+    font-weight: 900;
+    font-size: 7pt;
+    margin-bottom: 0.6mm;
+  }
+  .pdf-entry .dp{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .pdf-entry .k{
+    font-size: 5.8pt;
+    opacity:.65;
+    font-weight: 900;
+  }
+  .pdf-entry .v{
+    font-size: 6.5pt;
+    font-weight: 900;
+  }
+
+  /* mod super-compact pentru 10 coloane (tot portret) */
+  body.pdf-cols-10 .pdf-ter{ padding: 0.6mm; }
+  body.pdf-cols-10 .pdf-ter h3{ font-size: 6.6pt; margin-bottom: 0.6mm; padding-bottom: 0.6mm; }
+  body.pdf-cols-10 .pdf-entry .n{ font-size: 6.2pt; }
+  body.pdf-cols-10 .pdf-entry .v{ font-size: 6.0pt; }
 }
+
+
 
 
   </style>
@@ -270,16 +336,31 @@ function buildPdfHistoryReport(rows){
     return `
       <div class="pdf-ter">
         <h3>${esc(teritoriu)}</h3>
-        <table class="pdf-mini">
-          <thead>
-            <tr>
-              <th>Nume</th>
-              <th>Dat</th>
-              <th>Predat</th>
-            </tr>
-          </thead>
-          <tbody>${body}</tbody>
-        </table>
+        const body = entries.length
+  ? entries.map(e => `
+      <div class="pdf-entry">
+        <div class="n">${esc(e.nume || "—")}</div>
+        <div class="dp">
+          <div>
+            <div class="k">Dat</div>
+            <div class="v">${esc(e.dat || "—")}</div>
+          </div>
+          <div>
+            <div class="k">Predat</div>
+            <div class="v">${esc(e.predat || "—")}</div>
+          </div>
+        </div>
+      </div>
+    `).join("")
+  : `<div class="pdf-entry" style="opacity:.75;">Fără istoric</div>`;
+
+return `
+  <div class="pdf-ter">
+    <h3>${esc(teritoriu)}</h3>
+    ${body}
+  </div>
+`;
+
       </div>
     `;
   }).join("");
