@@ -81,11 +81,6 @@ summary{ cursor:pointer; font-weight:800; opacity:.85; }
   border-color: #1d4ed8 !important;
 }
 
-.pdf-actions {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
 
 .btn-pdf {
   background: linear-gradient(135deg, #4f7cff, #6a5cff);
@@ -107,4 +102,21 @@ summary{ cursor:pointer; font-weight:800; opacity:.85; }
 
 .btn-pdf.secondary {
   background: linear-gradient(135deg, #00b894, #00cec9);
+}
+
+/* PDF buttons container */
+.pdf-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;         /* dacă nu încape, trece pe rând următor */
+  justify-content:flex-start; /* se aliniază ca restul butoanelor */
+  align-items:stretch;
+  width:100%;
+}
+
+@media (max-width: 768px) {
+  .pdf-actions {
+    flex-direction: column;  /* pe telefon unul sub altul */
+    align-items: stretch;
+  }
 }
