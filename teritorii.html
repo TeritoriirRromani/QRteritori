@@ -184,10 +184,10 @@ function hslToCss({h,s,l}){ return `hsl(${h} ${s}% ${l}%)`; }
     }
 
     /* ========= PDF ========= */
-    function setPdfCols(cols){
-      document.body.classList.remove("pdf-cols-5","pdf-cols-10");
-      document.body.classList.add(cols === 10 ? "pdf-cols-10" : "pdf-cols-5");
-    }
+   function setPdfCols(cols){
+  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
+  document.body.classList.add(cols === 10 ? "pdf-cols-10" : "pdf-cols-5");
+}
 
     function zoneClass(teritoriu){
   const t = String(teritoriu || "").toLowerCase();
@@ -263,16 +263,20 @@ const cards = r.map(row => {
 
 function exportPdf(){
   const cols = (prompt("Câte teritorii pe rând? (5 sau 10)", "5") === "10") ? 10 : 5;
+
   setPdfCols(cols);
 
   const el = document.getElementById("pdfReport");
   if (!el) return;
 
-  // titlul tău fix:
   el.innerHTML = buildPdfHistoryReport(window.__rows, "Teritorii Zalău Centru Rromani");
 
   window.print();
 }
+
+window.addEventListener("afterprint", () => {
+  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
+});
 
 // curățăm clasa după print
 window.addEventListener("afterprint", () => {
