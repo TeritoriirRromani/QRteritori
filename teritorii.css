@@ -55,3 +55,29 @@ summary{ cursor:pointer; font-weight:800; opacity:.85; }
 .pdf-report{ margin:0; padding:0; background:white; color:black; }
 
 /* ===== PRINT: show only #pdfReport ===== */
+/* ===== Fix contrast butoane (override) ===== */
+.top-actions .btn{
+  color: #1f2937 !important;           /* text închis */
+  background: #f8fafc !important;      /* fundal deschis */
+  border-color: #cbd5e1 !important;
+}
+
+.top-actions .btn:hover{
+  background: #eef2f7 !important;
+}
+
+.top-actions .btn:active{
+  background: #e5eaf2 !important;
+}
+
+/* Opțional: buton “primary” (dacă vrei Export mai evident) */
+.top-actions .btn.btn-primary{
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+}
+.top-actions .btn.btn-primary:hover{
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+
