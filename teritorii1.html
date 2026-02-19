@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teritorii</title>
+
+  <link rel="stylesheet" href="introducere-style.css">
+  <link rel="stylesheet" href="teritorii-print.css" media="print">
+  <link rel="stylesheet" href="teritorii.css">
+
+
+</head>
+
+<body>
+  <div class="page-info">
+    <span id="info">Teritorii: 0</span>
+  </div>
+
+  <div class="form-container">
+    <h1>Teritorii</h1>
+
+    <div class="top-actions">
+      <input class="search" id="q" placeholder="Caută teritoriu / frate..." />
+      <button class="btn" onclick="refresh()">Reîncarcă</button>
+      <button class="btn" onclick="exportPdf()">Export PDF</button>
+    </div>
+
+    <div class="list" id="list">
+      <div class="card">Se încarcă…</div>
+    </div>
+
+    <p id="status"></p>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="introducere.html">
+      <img src="icon-introducere.svg" class="icon-img">
+      <span class="label">Intro</span>
+    </a>
+    <a href="predare.html">
+      <img src="icon-predare.svg" class="icon-img">
+      <span class="label">Predă</span>
+    </a>
+    <a href="evidenta.html">
+      <img src="icon-evidenta.svg" class="icon-img">
+      <span class="label">Evidență</span>
+    </a>
+    <a href="teritorii.html" class="active">
+      <img src="icon-teritorii.svg" class="icon-img">
+      <span class="label">Teritorii</span>
+    </a>
+  </nav>
+
+  <!-- raportul pentru PDF (ascuns pe ecran) -->
+  <div id="pdfReport" class="pdf-report" style="display:none;"></div>
+
+  <!-- URL global -->
+  <script src="config.js"></script>
+
+  <script>
+    const STANDARD_DAYS = 120;
+    window.__rows = [];
+
+    /* ========= Helpers ========= */
+    function esc(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+// Scoate sufixul de identificare din final, ca să grupeze corect culorile:
+// "Zalău 12" -> "Zalău"
+// "Zalău 12A" -> "Zalău"
+// "Zalău-12" -> "Zalău"
+function getBaseName(name){
+  const s = String(name || "").trim();
+  return s
+    .replace(/\s*[-–—]?\s*\d+\s*[a-zA-Z]?\s*$/, "")
+    .trim();
+}
+
+// Cheie stabilă pentru culori (fără diferențe de majuscule/diacritice)
+function baseKey(name){
+  return getBaseName(name)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Generează culoare stabilă din text (mereu aceeași pt același nume)
+function stringToHsl(str){
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+
+  const hue = ((hash % 360) + 360) % 360;
+  return { h: hue, s: 65, l: 90 }; // pastel, mai "airy"
+}
+function hslToCss({h,s,l}){ return `hsl(${h} ${s}% ${l}%)`; }
+
+
+
+
+    function setStatus(t, cls){
+      const el = document.getElementById("status");
+      if (!el) return;
+      el.textContent = t || "";
+      el.className = cls || "";
+    }
+
+    function loadJsonp(url){
+      return new Promise((resolve, reject)=>{
+        const s = document.createElement("script");
+        s.src = url;
+        s.onload = ()=>{ s.remove(); resolve(); };
+        s.onerror = ()=>{ s.remove(); reject(new Error("JSONP load failed")); };
+        document.body.appendChild(s);
+      });
+    }
+
+    function parseRoDate(s){
+      if (!s) return null;
+      const m = String(s).match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      if (!m) return null;
+      const dd = Number(m[1]), mm = Number(m[2]) - 1, yy = Number(m[3]);
+      const d = new Date(yy, mm, dd);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    // [{nume, dat, predat}, ...] sortat cronologic
+    function flattenHistory(row){
+      const out = [];
+      const history = Array.isArray(row?.history) ? row.history : [];
+
+      history.forEach(h => {
+        const nume = h?.nume ? String(h.nume) : "—";
+        const intrari = Array.isArray(h?.intrari) ? h.intrari : [];
+        intrari.forEach(x => {
+          out.push({
+            nume,
+            dat: x?.dat ? String(x.dat) : "",
+            predat: x?.predat ? String(x.predat) : ""
+          });
+        });
+      });
+
+      const cleaned = out.filter(e => e.nume || e.dat || e.predat);
+
+      cleaned.sort((a,b)=>{
+        const da = parseRoDate(a.dat);
+        const db = parseRoDate(b.dat);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return da.getTime() - db.getTime();
+      });
+
+      return cleaned;
+    }
+
+    function renderHistory(historyArr) {
+      if (!Array.isArray(historyArr) || !historyArr.length) return "";
+
+      return historyArr.map(h => {
+        const rows = (h.intrari || []).map(x => `
+          <div class="hist-row">
+            <div class="hist-cell">
+              <div class="hist-head">Dat</div>
+              <div class="hist-val">${esc(x.dat || "-")}</div>
+            </div>
+            <div class="hist-cell">
+              <div class="hist-head">Predat</div>
+              <div class="hist-val">${esc(x.predat || "-")}</div>
+            </div>
+          </div>
+        `).join("");
+
+        return `
+          <div class="hist-block">
+            <div class="hist-name">${esc(h.nume || "—")}</div>
+            ${rows}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function formatDeadline(row) {
+      if (!row.dataLimita) return "—";
+      const z = Number(row.zileRamase);
+      if (isNaN(z)) return esc(row.dataLimita);
+      if (z < 0) return `${esc(row.dataLimita)} (expirat de ${Math.abs(z)} zile)`;
+      return `${esc(row.dataLimita)} (${z} zile)`;
+    }
+
+    /* ========= PDF ========= */
+   function setPdfCols(cols){
+  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
+  document.body.classList.add(cols === 10 ? "pdf-cols-10" : "pdf-cols-5");
+}
+
+    function zoneClass(teritoriu){
+  const t = String(teritoriu || "").toLowerCase();
+
+  // ajustează cum vrei tu aici (ex: “zalau 1”, “ortelec 3”, etc)
+  if (t.includes("zalau")) return "pdf-zone-zalau";
+  if (t.includes("ortelec")) return "pdf-zone-ortelec";
+  return "pdf-zone-alta";
+}
+
+   // ISTORIC: îl vrem în ordine cronologică (prima -> ultima)
+// tu ai zis că vrei “toate dățile” + la ultima dacă nu e predat => "-"
+function buildPdfHistoryReport(rows, titleText){
+  const r = Array.isArray(rows) ? rows : [];
+  const stamp = new Date().toLocaleString("ro-RO");
+  const title = titleText || "Teritorii Zalău Centru Rromani";
+
+const cards = r.map(row => {
+  const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
+  const key = baseKey(teritoriu);
+
+  const c = stringToHsl(key);
+  const bg = hslToCss({ ...c, l: 90 });   // fundal card
+  const bar = hslToCss({ ...c, l: 45 });  // banda de sus (mai închis)
+  const line = hslToCss({ ...c, l: 60 }); // linii / accent
+
+  const entries = flattenHistory(row);
+
+  const body = entries.length
+    ? entries.map(e => `
+        <div class="pdf-entry">
+          <div class="n">${esc(e.nume || "—")}</div>
+          <div class="dp">
+            <div class="cell">
+              <div class="k">Dat</div>
+              <div class="v">${esc(e.dat || "—")}</div>
+            </div>
+            <div class="cell">
+              <div class="k">Predat</div>
+              <div class="v">${esc(e.predat || "—")}</div>
+            </div>
+          </div>
+        </div>
+      `).join("")
+    : `<div class="pdf-entry is-empty">Fără istoric</div>`;
+
+  // IMPORTANT: afișăm TERITORIU COMPLET, dar culoarea vine din BASE
+  return `
+    <div class="pdf-ter" style="--bg:${bg}; --bar:${bar}; --line:${line};">
+      <div class="pdf-ter-head">
+        <div class="pdf-ter-title">${esc(teritoriu)}</div>
+      </div>
+      <div class="pdf-ter-body">
+        ${body}
+      </div>
+    </div>
+  `;
+}).join("");
+
+  return `
+    <div class="pdf-report">
+      <div class="pdf-header">
+        <div class="pdf-title">${esc(title)}</div>
+        <div class="pdf-date">${esc(stamp)}</div>
+      </div>
+
+      <div class="pdf-grid">
+        ${cards}
+      </div>
+         </div>
+  `;
+}
+
+function exportPdf(){
+  const cols = (prompt("Câte teritorii pe rând? (5 sau 10)", "5") === "10") ? 10 : 5;
+
+  setPdfCols(cols);
+
+  const el = document.getElementById("pdfReport");
+  if (!el) return;
+
+  el.innerHTML = buildPdfHistoryReport(window.__rows, "Teritorii Zalău Centru Rromani");
+
+  window.print();
+}
+
+window.addEventListener("afterprint", () => {
+  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
+});
+
+// curățăm clasa după print
+window.addEventListener("afterprint", () => {
+  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
+});
+
+    /* ========= UI list ========= */
+    function renderList(rows){
+      const list = document.getElementById("list");
+      const info = document.getElementById("info");
+      const q = (document.getElementById("q").value || "").toLowerCase().trim();
+
+      const arr = Array.isArray(rows) ? rows : [];
+      if (info) info.textContent = "Teritorii: " + arr.length;
+
+      const filtered = q
+        ? arr.filter(r =>
+            (r.teritoriu || "").toLowerCase().includes(q) ||
+            (r.frateCurent || "").toLowerCase().includes(q)
+          )
+        : arr;
+
+      if (!filtered.length){
+        list.innerHTML = `<div class="card">Nu există rezultate.</div>`;
+        return;
+      }
+
+      list.innerHTML = "";
+
+      filtered.forEach(r=>{
+        const esteActiv = !!r.frateCurent;
+        const zile = (r.zileRamase === null || r.zileRamase === undefined) ? null : Number(r.zileRamase);
+        const pct = (zile === null) ? 0 : Math.min(Math.max((zile / STANDARD_DAYS) * 100, 0), 100);
+
+        let badge = "b-free", badgeTxt = "LIBER", color="#365f9c";
+        if (esteActiv){
+          badge = "b-ok"; badgeTxt = "OK"; color="#1e8e3e";
+          if (zile !== null && zile <= 0) { badge="b-urgent"; badgeTxt="EXPIRAT"; color="#d93025"; }
+          else if (zile !== null && zile < 7) { badge="b-urgent"; badgeTxt="URGENT"; color="#d93025"; }
+          else if (zile !== null && zile <= 30) { badge="b-warn"; badgeTxt="ATENȚIE"; color="#f9a825"; }
+        }
+
+        const la = r.lastAssignment || null;
+        const lastLine = (!esteActiv && la && (la.nume || la.dat || la.predat))
+          ? `${esc(la.nume || "—")} • ${esc(la.dat || "—")} → ${esc(la.predat || "—")}`
+          : "";
+
+        const hist = Array.isArray(r.history) ? r.history : [];
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="row">
+            <div>
+              <div class="label">Teritoriu</div>
+              <div class="val">${esc(r.teritoriu)} <span class="badge ${badge}">${badgeTxt}</span></div>
+
+              ${lastLine ? `
+                <div class="label" style="margin-top:6px;">Ultima dată</div>
+                <div class="val" style="font-weight:700; opacity:.9;">${lastLine}</div>
+              ` : ""}
+            </div>
+
+            <div>
+              <div class="label">Frate curent</div>
+              <div class="val">${esc(r.frateCurent || "—")}</div>
+
+              <div class="label" style="margin-top:6px;">Data atribuirii</div>
+              <div class="val">${esc(r.dataAtribuireCurenta || "—")}</div>
+            </div>
+
+            <div>
+              <div class="label">Limită</div>
+              <div class="val" style="color:${color};">
+                ${esteActiv ? formatDeadline(r) : "—"}
+              </div>
+              <div class="progress">
+                <div class="bar" style="background:${color}; width:${pct}%;"></div>
+              </div>
+            </div>
+          </div>
+
+          ${hist.length ? `
+            <details>
+              <summary>Istoric (${hist.length})</summary>
+              ${renderHistory(hist)}
+            </details>
+          ` : ""}
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    window.populateTeritorii = function(rows){
+      window.__rows = Array.isArray(rows) ? rows : [];
+      renderList(window.__rows);
+    };
+
+    async function refresh(){
+      setStatus("", "");
+      document.getElementById("list").innerHTML = `<div class="card">Se încarcă…</div>`;
+
+      try{
+        if (typeof SCRIPT_URL === "undefined" || !SCRIPT_URL) {
+          throw new Error("SCRIPT_URL lipsește (verifică config.js)");
+        }
+        await loadJsonp(SCRIPT_URL + "?action=teritorii&callback=populateTeritorii");
+      } catch(e){
+        setStatus("Eroare la încărcare: " + (e.message || e), "error");
+        document.getElementById("list").innerHTML = `<div class="card">Eroare la încărcare.</div>`;
+      }
+    }
+
+    document.getElementById("q").addEventListener("input", ()=> renderList(window.__rows));
+    window.addEventListener("load", refresh);
+
+    // expunere globală pentru onclick
+    window.refresh = refresh;
+    window.exportPdf = exportPdf;
+  </script>
+</body>
+</html>
