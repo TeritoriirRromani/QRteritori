@@ -81,14 +81,14 @@ function getBaseName(name){
 
 // Generează culoare stabilă din text (mereu aceeași pt același nume)
 function stringToColor(str){
-  let hash = 0;
   str = String(str || "");
-  for (let i = 0; i < str.length; i++) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++){
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    hash |= 0; // 32-bit
   }
-
-  const hue = ((hash % 360) + 360) % 360; // ✅ mereu 0..359
-  return `hsl(${hue}, 65%, 88%)`;
+  const hue = ((hash % 360) + 360) % 360; // mereu 0..359
+  return `hsl(${hue}, 55%, 90%)`;         // pastel “soft”
 }
 
 
