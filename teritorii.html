@@ -80,16 +80,15 @@ function getBaseName(name){
 }
 
 // Generează culoare stabilă din text (mereu aceeași pt același nume)
-function stringToColor(str){
-  str = String(str || "");
+function stringToHsl(str){
   let hash = 0;
-  for (let i = 0; i < str.length; i++){
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    hash |= 0; // 32-bit
-  }
-  const hue = ((hash % 360) + 360) % 360; // mereu 0..359
-  return `hsl(${hue}, 55%, 90%)`;         // pastel “soft”
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+
+  const hue = ((hash % 360) + 360) % 360;
+  return { h: hue, s: 70, l: 88 }; // pastel
 }
+function hslToCss({h,s,l}){ return `hsl(${h} ${s}% ${l}%)`; }
+
 
 
 
@@ -206,39 +205,47 @@ function buildPdfHistoryReport(rows, titleText){
   const stamp = new Date().toLocaleString("ro-RO");
   const title = titleText || "Teritorii Zalău Centru Rromani";
 
-  const cards = r.map(row => {
+const cards = r.map(row => {
   const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
   const base = getBaseName(teritoriu);
-  const color = stringToColor(base);
+
+  const c = stringToHsl(base);
+  const bg = hslToCss({ ...c, l: 90 });   // fundal card
+  const bar = hslToCss({ ...c, l: 45 });  // banda de sus (mai închis)
+  const line = hslToCss({ ...c, l: 60 }); // linii / accent
 
   const entries = flattenHistory(row);
- // din codul tău (returnează [{nume,dat,predat}...])
 
-    const body = entries.length
-      ? entries.map(e => `
-          <div class="pdf-entry">
-            <div class="n">${esc(e.nume || "—")}</div>
-            <div class="dp">
-              <div>
-                <div class="k">Dat</div>
-                <div class="v">${esc(e.dat || "—")}</div>
-              </div>
-              <div>
-                <div class="k">Predat</div>
-                <div class="v">${esc(e.predat || "—")}</div>
-              </div>
+  const body = entries.length
+    ? entries.map(e => `
+        <div class="pdf-entry">
+          <div class="n">${esc(e.nume || "—")}</div>
+          <div class="dp">
+            <div class="cell">
+              <div class="k">Dat</div>
+              <div class="v">${esc(e.dat || "—")}</div>
+            </div>
+            <div class="cell">
+              <div class="k">Predat</div>
+              <div class="v">${esc(e.predat || "—")}</div>
             </div>
           </div>
-        `).join("")
-      : `<div class="pdf-entry" style="opacity:.75;">Fără istoric</div>`;
+        </div>
+      `).join("")
+    : `<div class="pdf-entry is-empty">Fără istoric</div>`;
 
-    return `
-      <div class="pdf-ter  ${zoneClass(teritoriu)}" style="background:${color};">
-        <h3>${esc(teritoriu)}</h3>
+  // IMPORTANT: afișăm TERITORIU COMPLET, dar culoarea vine din BASE
+  return `
+    <div class="pdf-ter" style="--bg:${bg}; --bar:${bar}; --line:${line};">
+      <div class="pdf-ter-head">
+        <div class="pdf-ter-title">${esc(teritoriu)}</div>
+      </div>
+      <div class="pdf-ter-body">
         ${body}
       </div>
-    `;
-  }).join("");
+    </div>
+  `;
+}).join("");
 
   return `
     <div class="pdf-report">
