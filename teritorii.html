@@ -63,120 +63,66 @@
     /* =======================
        RAPORT PDF (layout fix)
        ======================= */
-    .pdf-report{
-      max-width:900px; margin:0 auto; padding:10mm; background:white; color:black;
-    }
-    .pdf-title{ font-size:18px; font-weight:1000; margin:0 0 6px 0; }
-    .pdf-sub{ font-size:12px; opacity:.75; margin:0 0 12px 0; }
-    .pdf-summary{
-      display:grid; grid-template-columns:repeat(5, 1fr);
-      gap:8px; margin:10px 0 14px 0;
-    }
-    .pdf-box{ border:1px solid #ddd; border-radius:10px; padding:8px; text-align:center; }
-    .pdf-box .k{ font-size:10px; opacity:.7; font-weight:900; }
-    .pdf-box .v{ font-size:16px; font-weight:1000; margin-top:2px; }
-
-    .pdf-table{ width:100%; border-collapse:collapse; font-size:11px; }
-    .pdf-table th, .pdf-table td{ border:1px solid #ddd; padding:6px 7px; vertical-align:top; }
-    .pdf-table th{ background:#f3f6fb; font-weight:1000; text-align:left; }
-
-    .pdf-status{
-      font-weight:1000; padding:2px 6px; border-radius:999px; display:inline-block; border:1px solid #ddd;
-    }
-    .pdf-s-ok{ background:#e6f4ea; color:#1e8e3e; border-color:#cfe8d6; }
-    .pdf-s-warn{ background:#fff3cd; color:#b07b00; border-color:#f0e0a6; }
-    .pdf-s-urg{ background:#ffd6d6; color:#d93025; border-color:#f1b7b7; }
-    .pdf-s-free{ background:#e8f0fe; color:#365f9c; border-color:#c9d8fb; }
-
-    /* =======================
-   PDF: ISTORIC PE TERITORII (grid cu 5/10 coloane)
-   ======================= */
-.pdf-history{
+  .pdf-report{
+  margin: 0;
   padding: 0;
   background: white;
   color: black;
 }
 
-/* wrapper care se potrivește exact pe pagina printabilă */
-.pdf-page{
-  width: 100%;
-}
-
-/* grid pe toată lățimea paginii */
+/* grid generic */
 .pdf-grid{
   display: grid;
-  gap: 6mm;                 /* gap în mm -> stabil la print */
-  grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr));
+  gap: 6mm;
 }
 
-/* card */
+/* un “card” de teritoriu */
 .pdf-ter{
   border: 1px solid #ddd;
   border-radius: 3mm;
-  padding: 2.5mm;
+  padding: 3mm;
   break-inside: avoid;
   page-break-inside: avoid;
-  overflow: hidden;         /* evită “ieșiri” */
 }
 
 .pdf-ter h3{
-  margin: 0 0 2mm 0;
   font-size: 10pt;
-  font-weight: 900;
-  text-align: center;
-  border-bottom: 1px solid #eee;
+  margin: 0 0 2mm 0;
   padding-bottom: 1.5mm;
+  border-bottom: 1px solid #eee;
 }
 
 .pdf-mini{
   width: 100%;
   border-collapse: collapse;
-  font-size: 8.5pt;
+  font-size: 8pt;
 }
 
 .pdf-mini th, .pdf-mini td{
   border-top: 1px solid #eee;
-  padding: 1.5mm 1mm;
+  padding: 1.2mm 0.8mm;
   vertical-align: top;
 }
 
-.pdf-mini th{
-  font-weight: 900;
-  opacity: .75;
-  text-align: left;
-}
+@media print{
+  @page { size: A4; margin: 8mm; }
 
-.pdf-mini td:nth-child(2),
-.pdf-mini td:nth-child(3){
-  white-space: nowrap;
-  text-align: center;
-}
-
-/* PRINT: arătăm doar raportul istoric */
-@media print {
-
-  /* Pagina default */
-  @page { size: A4; margin: 10mm; }
-
-  /* ascundem UI și nav */
+  /* ascundem UI */
   .form-container, .bottom-nav, .page-info { display:none !important; }
 
-  /* arătăm doar raportul */
+  /* arătăm raportul */
   #pdfReport { display:block !important; }
 
-  /* evităm tăieri urâte */
-  .pdf-ter { break-inside: avoid; page-break-inside: avoid; }
-  tr { break-inside: avoid; page-break-inside: avoid; }
+  /* IMPORTANT: portret, controlăm coloanele aici */
+  body.pdf-cols-5  .pdf-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  body.pdf-cols-10 .pdf-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
 
-  /* ===== Mod compact (10 coloane) =====
-     NOTĂ: @page NU poate fi condiționat cu body.pdf-cols-10 în CSS.
-     Landscape trebuie ales din dialogul de print (sau folosești o pagină separată). */
-  body.pdf-cols-10 .pdf-grid{ gap: 3mm; }
+  /* mod compact pentru 10 coloane (ca să încapă) */
   body.pdf-cols-10 .pdf-ter{ padding: 1.5mm; border-radius: 2mm; }
-  body.pdf-cols-10 .pdf-ter h3{ font-size: 8pt; padding-bottom: 1mm; margin-bottom: 1.5mm; }
-  body.pdf-cols-10 .pdf-mini{ font-size: 6.5pt; }
+  body.pdf-cols-10 .pdf-ter h3{ font-size: 7pt; margin-bottom: 1mm; padding-bottom: 1mm; }
+  body.pdf-cols-10 .pdf-mini{ font-size: 6pt; }
   body.pdf-cols-10 .pdf-mini th,
-  body.pdf-cols-10 .pdf-mini td{ padding: 1mm 0.7mm; }
+  body.pdf-cols-10 .pdf-mini td{ padding: 0.8mm 0.4mm; }
 }
 
   </style>
