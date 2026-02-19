@@ -1,4 +1,4 @@
-@media print {
+
   @page { size: A4; margin: 2mm; }
 
   html, body { margin:0 !important; padding:0 !important; background:#fff !important; }
@@ -131,4 +131,4 @@
   body.pdf-cols-10 .pdf-ter-body{ padding: .5mm .5mm; }
   body.pdf-cols-10 .pdf-entry .n{ font-size: 5.9pt; }
   body.pdf-cols-10 .pdf-entry .v{ font-size: 5.7pt; }
-}
+
