@@ -2,6 +2,7 @@
 
 /* IMPORTANT: tăiem orice padding/margini moștenite */
 @media print {
+  @page { size: A4; margin: 3mm; }
   html, body {
     margin: 0 !important;
     padding: 0 !important;
