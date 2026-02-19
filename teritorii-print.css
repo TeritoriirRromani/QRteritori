@@ -9,6 +9,14 @@
     background: #fff !important;
   }
 
+  /* multe din paginile tale folosesc layout centrat (flex).
+     Pentru print vrem întotdeauna conținutul să pornească de SUS. */
+  body{
+    display: block !important;
+    align-items: initial !important;
+    justify-content: initial !important;
+  }
+
   /* ascundem UI */
   .form-container, .bottom-nav, .page-info { display: none !important; }
 
@@ -60,32 +68,45 @@
   body.pdf-cols-5  .pdf-grid { grid-template-columns: repeat(5,  minmax(0, 1fr)) !important; }
   body.pdf-cols-10 .pdf-grid { grid-template-columns: repeat(10, minmax(0, 1fr)) !important; }
 
-  /* card teritoriu */
+  /* card teritoriu (modern + culori pastel) */
   .pdf-ter{
-    border: 0.25mm solid rgba(0,0,0,0.25);
-    border-radius: 0;
-    padding: 1mm;
+    /* variabile setate inline din JS: --bg --bar --line */
+    background: var(--bg, #f8fafc) !important;
+    border: 0.25mm solid rgba(0,0,0,0.14);
+    border-radius: 1.2mm;
     margin: 0 !important;
     break-inside: avoid;
     page-break-inside: avoid;
     overflow: hidden;
   }
 
-  .pdf-ter h3{
-    text-align:center;
-    font-size: 7.4pt;
-    font-weight: 900;
-    margin: 0 0 .8mm 0;
-    padding: 0 0 .6mm 0;
-    border-bottom: 0.25mm solid rgba(0,0,0,0.25);
-    letter-spacing: .2px;
+  .pdf-ter-head{
+    background: var(--bar, #334155) !important;
+    padding: .9mm 1mm;
+    border-bottom: 0.25mm solid rgba(0,0,0,0.10);
   }
+
+  .pdf-ter-title{
+    text-align:center;
+    font-size: 7.2pt;
+    font-weight: 900;
+    margin: 0;
+    line-height: 1.15;
+    letter-spacing: .15px;
+    color: #0b1220;
+    /* dacă bara e mai închisă, păstrăm text închis dar cu un mic "glow" alb */
+    text-shadow: 0 0 0.35mm rgba(255,255,255,0.55);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .pdf-ter-body{ padding: .8mm 1mm 1mm 1mm; }
 
   /* intrări istoric: nume centrat, dedesubt Dat/Predat */
   .pdf-entry{
     text-align:center;
     padding: .8mm 0;
-    border-top: 0.2mm solid rgba(0,0,0,0.12);
+    border-top: 0.2mm solid rgba(0,0,0,0.10);
   }
   .pdf-entry:first-child{ border-top:none; }
 
@@ -114,9 +135,17 @@
     overflow-wrap: anywhere;
   }
 
+  /* "Fără istoric" - mai mic și discret */
+  .pdf-entry.is-empty{
+    font-size: 5.6pt;
+    font-weight: 800;
+    opacity: .65;
+    padding: 1.2mm 0 1.0mm 0;
+  }
+
   /* ultra-compact pt 10 coloane (tot portret) */
-  body.pdf-cols-10 .pdf-ter{ padding: .6mm; }
-  body.pdf-cols-10 .pdf-ter h3{ font-size: 6.4pt; margin-bottom: .5mm; padding-bottom: .5mm; }
+  body.pdf-cols-10 .pdf-ter-body{ padding: .6mm .8mm .8mm .8mm; }
+  body.pdf-cols-10 .pdf-ter-title{ font-size: 6.3pt; }
   body.pdf-cols-10 .pdf-entry .n{ font-size: 6.0pt; }
   body.pdf-cols-10 .pdf-entry .v{ font-size: 5.8pt; }
 }

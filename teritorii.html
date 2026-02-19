@@ -72,10 +72,24 @@
         .replaceAll("'","&#039;");
     }
 
-    // Scoate numărul din final: "Zalău 12" -> "Zalău"
+// Scoate sufixul de identificare din final, ca să grupeze corect culorile:
+// "Zalău 12" -> "Zalău"
+// "Zalău 12A" -> "Zalău"
+// "Zalău-12" -> "Zalău"
 function getBaseName(name){
-  return String(name || "")
-    .replace(/\s*\d+$/, "")  // elimină număr final
+  const s = String(name || "").trim();
+  return s
+    .replace(/\s*[-–—]?\s*\d+\s*[a-zA-Z]?\s*$/, "")
+    .trim();
+}
+
+// Cheie stabilă pentru culori (fără diferențe de majuscule/diacritice)
+function baseKey(name){
+  return getBaseName(name)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -85,7 +99,7 @@ function stringToHsl(str){
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
 
   const hue = ((hash % 360) + 360) % 360;
-  return { h: hue, s: 70, l: 88 }; // pastel
+  return { h: hue, s: 65, l: 90 }; // pastel, mai "airy"
 }
 function hslToCss({h,s,l}){ return `hsl(${h} ${s}% ${l}%)`; }
 
@@ -207,9 +221,9 @@ function buildPdfHistoryReport(rows, titleText){
 
 const cards = r.map(row => {
   const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
-  const base = getBaseName(teritoriu);
+  const key = baseKey(teritoriu);
 
-  const c = stringToHsl(base);
+  const c = stringToHsl(key);
   const bg = hslToCss({ ...c, l: 90 });   // fundal card
   const bar = hslToCss({ ...c, l: 45 });  // banda de sus (mai închis)
   const line = hslToCss({ ...c, l: 60 }); // linii / accent

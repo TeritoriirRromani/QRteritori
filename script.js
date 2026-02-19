@@ -8,16 +8,11 @@ const STANDARD_DAYS = 120;
 // Delay redirect automat (când e un singur link)
 const AUTO_REDIRECT_DELAY_MS = 2200;
 
-// Fallback URL (dacă config.js nu e încărcat / SCRIPT_URL lipsește)
-const FALLBACK_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbx49hDTAhuifxbylssXlhhlhO5Le70iTxWokvagKUnOXYsItpMwqIhMcOSKsVp2myw/exec";
-
-// Aici alegem URL-ul real:
-// - dacă există SCRIPT_URL (din config.js), îl folosim
-// - altfel folosim fallback
+// URL-ul WebApp-ului vine din config.js
+// (ideal: config.js este inclus înainte de script.js)
 const AS_URL = (typeof SCRIPT_URL !== "undefined" && SCRIPT_URL)
   ? SCRIPT_URL
-  : FALLBACK_SCRIPT_URL;
+  : "";
 
 /* =========================================================
    VERSE ROTATOR
@@ -240,6 +235,9 @@ if (k) {
 if (!k) {
   showErrorUI("Lipsește parametrul k");
 } else {
+  if (!AS_URL) {
+    showErrorUI("SCRIPT_URL lipsește (include config.js înainte de script.js)");
+  } else {
   // Afișăm (opțional) în consolă ce URL folosește
   console.log("Apps Script URL folosit:", AS_URL);
 
@@ -303,4 +301,5 @@ if (!k) {
       console.error(err);
       showErrorUI("Eroare la încărcare (verifică URL / deploy / permisiuni)");
     });
+  }
 }
