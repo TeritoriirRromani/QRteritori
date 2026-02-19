@@ -1,133 +1,130 @@
 /* teritorii-print.css */
-
 @media print {
-  /* margini cât mai mici (browserul poate impune minim) */
-  @page { size: A4; margin: 2mm; }
+  /* O SINGURĂ regulă @page */
+  @page { size: A4; margin: 2.5mm; }
 
-  html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #fff !important;
+  html, body{
+    margin:0 !important;
+    padding:0 !important;
+    background:#fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  /* dacă introducere-style.css are body display:flex/center, îl anulăm la print */
-  body {
-    display: block !important;
-  }
+  /* Ascundem UI */
+  .form-container, .bottom-nav, .page-info { display:none !important; }
 
-  /* ascundem UI */
-  .form-container, .bottom-nav, .page-info { display: none !important; }
+  /* Arătăm doar raportul */
+  #pdfReport { display:block !important; }
 
-  /* arătăm doar raportul */
-  #pdfReport { display: block !important; }
-
-  /* raportul să înceapă SUS și să folosească toată lățimea */
+  /* Container raport - SUS, nu centrat */
   .pdf-report{
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white;
-    color: black;
+    width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
   }
 
-  /* HEADER raport */
-  .pdf-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 4mm;
-    padding: 1mm 1mm 1mm 1mm;
-    border-bottom: 0.3mm solid #ddd;
-    margin: 0 0 1mm 0;
+  /* Header raport */
+  .pdf-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:3mm;
+    padding:1.5mm 1.5mm 1.2mm 1.5mm;
+    margin:0 0 1mm 0;
+    border-bottom:0.25mm solid #cfcfcf;
   }
-  .pdf-title {
-    font-size: 12pt;
-    font-weight: 900;
-    margin: 0;
-    line-height: 1.1;
+  .pdf-title{
+    font-size:12pt;
+    font-weight:900;
+    letter-spacing:.2px;
+    margin:0;
+    line-height:1.05;
   }
-  .pdf-date {
-    font-size: 8pt;
-    font-weight: 700;
-    opacity: .8;
-    white-space: nowrap;
-  }
-
-  /* GRID: lipit (fără gap) */
-  .pdf-grid {
-    display: grid;
-    gap: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
+  .pdf-date{
+    font-size:8pt;
+    font-weight:800;
+    opacity:.85;
+    white-space:nowrap;
   }
 
-  body.pdf-cols-5  .pdf-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  body.pdf-cols-10 .pdf-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+  /* Grid – LIPIT (fără gap) */
+  .pdf-grid{
+    display:grid;
+    gap:0 !important;
+    width:100% !important;
+    margin:0 !important;
+  }
+  body.pdf-cols-5  .pdf-grid{ grid-template-columns:repeat(5, minmax(0, 1fr)); }
+  body.pdf-cols-10 .pdf-grid{ grid-template-columns:repeat(10, minmax(0, 1fr)); }
 
-  /* “card” teritoriu – lipit */
-  .pdf-ter {
-    border: 0.25mm solid #bbb;
-    border-radius: 0 !important;
-    padding: 1mm;
-    margin: 0 !important;
+  /* Card teritoriu – “tile” lipit */
+  .pdf-ter{
+    border:0.22mm solid #bdbdbd;
+    border-radius:0 !important;
+    margin:0 !important;
+    padding:1mm;
+    break-inside:avoid;
+    page-break-inside:avoid;
+    overflow:hidden;
 
-    break-inside: avoid;
-    page-break-inside: avoid;
-
-    overflow: hidden;
+    /* un mic “frame” discret, fără să mănânce spațiu */
+    box-shadow: inset 0 0 0 0.15mm rgba(0,0,0,0.04);
   }
 
-  /* titlu teritoriu centrat */
-  .pdf-ter h3 {
-    text-align: center;
-    font-size: 7.3pt;
-    font-weight: 900;
-    margin: 0 0 .8mm 0;
-    padding: 0 0 .6mm 0;
-    border-bottom: 0.25mm solid #ddd;
-    letter-spacing: .1px;
+  /* Titlu teritoriu */
+  .pdf-ter h3{
+    text-align:center;
+    font-size:7.2pt;
+    font-weight:900;
+    margin:0 0 .8mm 0;
+    padding:0 0 .6mm 0;
+    border-bottom:0.22mm solid rgba(0,0,0,0.22);
+    letter-spacing:.15px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
 
-  /* intrări istoric: telefon-style */
-  .pdf-entry {
-    text-align: center;
-    padding: .8mm 0;
-    border-top: 0.2mm solid #eee;
+  /* Intrări istoric: “nume centrat + dat/predat sub” */
+  .pdf-entry{
+    text-align:center;
+    padding:.75mm 0;
+    border-top:0.18mm solid rgba(0,0,0,0.10);
   }
-  .pdf-entry:first-child { border-top: none; }
+  .pdf-entry:first-child{ border-top:none; }
 
-  .pdf-entry .n {
-    font-weight: 900;
-    font-size: 6.8pt;
-    margin-bottom: .4mm;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-  }
+  .pdf-entry .n{
+    font-weight:900;
+    font-size:6.8pt;
+    margin:0 0 .35mm 0;
 
-  .pdf-entry .dp {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
+    word-break:break-word;
+    overflow-wrap:anywhere;
   }
 
-  .pdf-entry .k {
-    font-size: 5.6pt;
-    font-weight: 900;
-    opacity: .65;
-    margin-bottom: .2mm;
+  .pdf-entry .dp{
+    display:grid;
+    grid-template-columns:1fr 1fr;
   }
 
-  .pdf-entry .v {
-    font-size: 6.2pt;
-    font-weight: 900;
-    word-break: break-word;
-    overflow-wrap: anywhere;
+  .pdf-entry .k{
+    font-size:5.5pt;
+    font-weight:900;
+    opacity:.65;
+    margin-bottom:.2mm;
+  }
+  .pdf-entry .v{
+    font-size:6.2pt;
+    font-weight:900;
+
+    word-break:break-word;
+    overflow-wrap:anywhere;
   }
 
-  /* super-compact pentru 10 coloane (tot portret) */
-  body.pdf-cols-10 .pdf-ter { padding: .5mm; }
-  body.pdf-cols-10 .pdf-ter h3 { font-size: 6.2pt; margin-bottom: .4mm; padding-bottom: .4mm; }
-  body.pdf-cols-10 .pdf-entry .n { font-size: 5.8pt; }
-  body.pdf-cols-10 .pdf-entry .v { font-size: 5.7pt; }
+  /* Mod super-compact pt 10 (tot portret) */
+  body.pdf-cols-10 .pdf-ter{ padding:.55mm; }
+  body.pdf-cols-10 .pdf-ter h3{ font-size:6.1pt; margin-bottom:.55mm; padding-bottom:.45mm; }
+  body.pdf-cols-10 .pdf-entry .n{ font-size:5.9pt; }
+  body.pdf-cols-10 .pdf-entry .v{ font-size:5.7pt; }
 }
