@@ -6,202 +6,7 @@
   <title>Teritorii</title>
 
   <link rel="stylesheet" href="introducere-style.css">
-
-  <style>
-    .top-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-    .search{
-      flex:1; min-width:180px; padding:10px 12px; border-radius:12px;
-      border:2px solid #d4dff0; outline:none; font-size:14px; background:#fff;
-    }
-    .btn{
-      padding:10px 12px; border-radius:12px; border:2px solid #d4dff0;
-      background:#f8fafd; font-weight:800; cursor:pointer;
-    }
-    .list{ display:flex; flex-direction:column; gap:12px; margin-top:12px; }
-    .card{
-      border:2px solid #d4dff0; background:#f8fafd; border-radius:16px; padding:14px;
-      animation: fadeIn .25s ease;
-    }
-    @keyframes fadeIn { from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
-
-    .row{ display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap:10px; align-items:start; }
-    .label{ font-size:12px; opacity:.75; margin-bottom:4px; }
-    .val{ font-size:14px; font-weight:800; word-break:break-word; }
-
-    .badge{
-      display:inline-block; margin-left:8px; padding:4px 8px; border-radius:999px;
-      font-size:11px; font-weight:900; vertical-align:middle;
-    }
-    .b-urgent{ background:#ffd6d6; color:#d93025; }
-    .b-warn{ background:#fff3cd; color:#f9a825; }
-    .b-ok{ background:#e6f4ea; color:#1e8e3e; }
-    .b-free{ background:#e8f0fe; color:#365f9c; }
-
-    .progress{ margin-top:10px; height:7px; border-radius:999px; overflow:hidden; background:#e0e0e0; }
-    .bar{ height:100%; width:0%; transition:width .8s ease; }
-
-    details{ margin-top:10px; }
-    summary{ cursor:pointer; font-weight:800; opacity:.85; }
-
-    /* Istoric premium */
-    .hist-block{
-      border:1px solid rgba(0,0,0,0.08); border-radius:14px; padding:12px;
-      background:rgba(248,250,253,0.95); margin-top:10px;
-    }
-    .hist-name{ text-align:center; font-weight:900; margin-bottom:10px; }
-    .hist-row{
-      display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:10px 0;
-      border-top:1px dashed rgba(0,0,0,0.12);
-    }
-    .hist-row:first-of-type{ border-top:none; padding-top:0; }
-    .hist-cell{ text-align:center; }
-    .hist-head{ font-size:11px; font-weight:900; opacity:0.65; margin-bottom:4px; }
-    .hist-val{ font-size:13px; font-weight:900; }
-
-    @media (max-width:520px){ .row{ grid-template-columns:1fr; } }
-
-    /* =======================
-       RAPORT PDF (layout fix)
-       ======================= */
-  .pdf-report{
-  margin: 0;
-  padding: 0;
-  background: white;
-  color: black;
-}
-
-/* grid generic */
-.pdf-grid{
-  display: grid;
-  gap: 6mm;
-}
-
-/* un “card” de teritoriu */
-.pdf-ter{
-  border: 1px solid #ddd;
-  border-radius: 3mm;
-  padding: 3mm;
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-
-.pdf-ter h3{
-  font-size: 10pt;
-  margin: 0 0 2mm 0;
-  padding-bottom: 1.5mm;
-  border-bottom: 1px solid #eee;
-}
-
-.pdf-mini{
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 8pt;
-}
-
-.pdf-mini th, .pdf-mini td{
-  border-top: 1px solid #eee;
-  padding: 1.2mm 0.8mm;
-  vertical-align: top;
-}
-
-@media print{
-  /* margini cât mai mici (atenție: browserul poate impune minim) */
-  @page { size: A4; margin: 4mm; }
-
-  .form-container, .bottom-nav, .page-info { display:none !important; }
-  #pdfReport { display:block !important; }
-
-  /* GRID: fără gap => lipite */
-  .pdf-grid{
-    display:grid;
-    gap: 0 !important;
-    width: 100%;
-  }
-
-  /* 5 sau 10 pe rând, dar să încapă textul: */
-  body.pdf-cols-5  .pdf-grid{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  body.pdf-cols-10 .pdf-grid{ grid-template-columns: repeat(10, minmax(0, 1fr)); }
-
-  /* pătrățel: fără margini între ele */
-  .pdf-ter{
-    border: 0.3mm solid #bbb;
-    border-radius: 0 !important;     /* ca să se “lipească” perfect */
-    padding: 1.2mm;                  /* mic */
-    margin: 0 !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
-
-    /* IMPORTANT pt text care iese: */
-    overflow: hidden;                /* nu mai iese în afară */
-  }
-
-  /* header teritoriu centrat */
-  .pdf-ter h3{
-    text-align:center;
-    font-size: 8pt;
-    margin: 0 0 1mm 0;
-    padding: 0 0 1mm 0;
-    border-bottom: 0.2mm solid #ddd;
-  }
-
-  /* tabel mic */
-  .pdf-mini{
-    width:100%;
-    border-collapse: collapse;
-    font-size: 6.7pt;
-  }
-
-  .pdf-mini th, .pdf-mini td{
-    border-top: 0.2mm solid #eee;
-    padding: 0.8mm 0.5mm;
-    vertical-align: top;
-
-    /* FIX pt text care iese */
-    word-break: break-word;
-    overflow-wrap: anywhere;
-  }
-
-  .pdf-mini thead{ display:none; } /* scoatem headerul Nume/Dat/Predat ca mănâncă spațiu */
-
-  /* rând “stil telefon”: nume pe mijloc, sub el Dat/Predat */
-  .pdf-entry{
-    text-align:center;
-    padding: 0.8mm 0;
-    border-top: 0.2mm solid #eee;
-  }
-  .pdf-entry:first-child{ border-top:none; }
-
-  .pdf-entry .n{
-    font-weight: 900;
-    font-size: 7pt;
-    margin-bottom: 0.6mm;
-  }
-  .pdf-entry .dp{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-  }
-  .pdf-entry .k{
-    font-size: 5.8pt;
-    opacity:.65;
-    font-weight: 900;
-  }
-  .pdf-entry .v{
-    font-size: 6.5pt;
-    font-weight: 900;
-  }
-
-  /* mod super-compact pentru 10 coloane (tot portret) */
-  body.pdf-cols-10 .pdf-ter{ padding: 0.6mm; }
-  body.pdf-cols-10 .pdf-ter h3{ font-size: 6.6pt; margin-bottom: 0.6mm; padding-bottom: 0.6mm; }
-  body.pdf-cols-10 .pdf-entry .n{ font-size: 6.2pt; }
-  body.pdf-cols-10 .pdf-entry .v{ font-size: 6.0pt; }
-}
-
-
-
-
-  </style>
+  <link rel="stylesheet" href="teritorii.css">
 </head>
 
 <body>
@@ -264,119 +69,6 @@
         .replaceAll("'","&#039;");
     }
 
-    // Parse "dd.MM.yyyy" -> Date (pt sortare)
-function parseRoDate(s){
-  if (!s) return null;
-  const m = String(s).match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-  if (!m) return null;
-  const dd = Number(m[1]), mm = Number(m[2]) - 1, yy = Number(m[3]);
-  const d = new Date(yy, mm, dd);
-  return isNaN(d.getTime()) ? null : d;
-}
-
-// Transformă formatul “history” (grupat pe nume) într-o listă cronologică:
-// [{nume, dat, predat}, ...]
-function flattenHistory(row){
-  const out = [];
-
-  const history = Array.isArray(row.history) ? row.history : [];
-  history.forEach(h => {
-    const nume = h?.nume ? String(h.nume) : "—";
-    const intrari = Array.isArray(h.intrari) ? h.intrari : [];
-    intrari.forEach(x => {
-      out.push({
-        nume,
-        dat: x?.dat ? String(x.dat) : "",
-        predat: x?.predat ? String(x.predat) : ""
-      });
-    });
-  });
-
-  // eliminăm complet goalele
-  const cleaned = out.filter(e => e.nume || e.dat || e.predat);
-
-  // sortare CRONOLOGICĂ (prima -> ultima)
-  cleaned.sort((a,b)=>{
-    const da = parseRoDate(a.dat);
-    const db = parseRoDate(b.dat);
-    if (!da && !db) return 0;
-    if (!da) return 1;
-    if (!db) return -1;
-    return da.getTime() - db.getTime();
-  });
-
-  return cleaned;
-}
-
-// Construiește raportul PDF “Istoric pe teritorii”
-function buildPdfHistoryReport(rows){
-  const r = Array.isArray(rows) ? rows : [];
-  const stamp = new Date().toLocaleString("ro-RO");
-
-  const cards = r.map(row => {
-    const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
-    const entries = flattenHistory(row); // trebuie să returneze [{nume,dat,predat}, ...]
-
-    const body = entries.length
-      ? entries.map(e => `
-          <tr>
-            <td>${esc(e.nume || "—")}</td>
-            <td>${esc(e.dat || "—")}</td>
-            <td>${esc(e.predat || "—")}</td>
-          </tr>
-        `).join("")
-      : `
-        <tr>
-          <td colspan="3" style="text-align:center; opacity:.75; padding:10px 0;">
-            Fără istoric
-          </td>
-        </tr>
-      `;
-
-    return `
-      <div class="pdf-ter">
-        <h3>${esc(teritoriu)}</h3>
-        const body = entries.length
-  ? entries.map(e => `
-      <div class="pdf-entry">
-        <div class="n">${esc(e.nume || "—")}</div>
-        <div class="dp">
-          <div>
-            <div class="k">Dat</div>
-            <div class="v">${esc(e.dat || "—")}</div>
-          </div>
-          <div>
-            <div class="k">Predat</div>
-            <div class="v">${esc(e.predat || "—")}</div>
-          </div>
-        </div>
-      </div>
-    `).join("")
-  : `<div class="pdf-entry" style="opacity:.75;">Fără istoric</div>`;
-
-return `
-  <div class="pdf-ter">
-    <h3>${esc(teritoriu)}</h3>
-    ${body}
-  </div>
-`;
-
-      </div>
-    `;
-  }).join("");
-
-  return `
-    <div class="pdf-history">
-      <div class="pdf-history-title">Raport istoric teritorii</div>
-      <div class="pdf-history-sub">Generat: ${esc(stamp)}</div>
-      <div class="pdf-grid">
-        ${cards}
-      </div>
-    </div>
-  `;
-}
-
-
     function setStatus(t, cls){
       const el = document.getElementById("status");
       if (!el) return;
@@ -392,6 +84,46 @@ return `
         s.onerror = ()=>{ s.remove(); reject(new Error("JSONP load failed")); };
         document.body.appendChild(s);
       });
+    }
+
+    function parseRoDate(s){
+      if (!s) return null;
+      const m = String(s).match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      if (!m) return null;
+      const dd = Number(m[1]), mm = Number(m[2]) - 1, yy = Number(m[3]);
+      const d = new Date(yy, mm, dd);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    // [{nume, dat, predat}, ...] sortat cronologic
+    function flattenHistory(row){
+      const out = [];
+      const history = Array.isArray(row?.history) ? row.history : [];
+
+      history.forEach(h => {
+        const nume = h?.nume ? String(h.nume) : "—";
+        const intrari = Array.isArray(h?.intrari) ? h.intrari : [];
+        intrari.forEach(x => {
+          out.push({
+            nume,
+            dat: x?.dat ? String(x.dat) : "",
+            predat: x?.predat ? String(x.predat) : ""
+          });
+        });
+      });
+
+      const cleaned = out.filter(e => e.nume || e.dat || e.predat);
+
+      cleaned.sort((a,b)=>{
+        const da = parseRoDate(a.dat);
+        const db = parseRoDate(b.dat);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return da.getTime() - db.getTime();
+      });
+
+      return cleaned;
     }
 
     function renderHistory(historyArr) {
@@ -428,94 +160,64 @@ return `
       return `${esc(row.dataLimita)} (${z} zile)`;
     }
 
-    /* ========= PDF helpers ========= */
-    function getStatusInfo(row){
-      const esteActiv = !!row.frateCurent;
-      const z = (row.zileRamase === null || row.zileRamase === undefined) ? null : Number(row.zileRamase);
-
-      if (!esteActiv) return { txt: "LIBER", cls: "pdf-s-free" };
-      if (z !== null && z <= 0) return { txt: "EXPIRAT", cls: "pdf-s-urg" };
-      if (z !== null && z < 7) return { txt: "URGENT", cls: "pdf-s-urg" };
-      if (z !== null && z <= 30) return { txt: "ATENȚIE", cls: "pdf-s-warn" };
-      return { txt: "OK", cls: "pdf-s-ok" };
-    }
-
-    function formatDeadlinePdf(row){
-      if (!row.dataLimita) return "—";
-      const z = Number(row.zileRamase);
-      if (isNaN(z)) return esc(row.dataLimita);
-      if (z < 0) return `${esc(row.dataLimita)} (expirat de ${Math.abs(z)} zile)`;
-      return `${esc(row.dataLimita)} (${z} zile)`;
-    }
-
+    /* ========= PDF ========= */
     function setPdfCols(cols){
-  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
-  document.body.classList.add(cols === 10 ? "pdf-cols-10" : "pdf-cols-5");
-}
+      document.body.classList.remove("pdf-cols-5","pdf-cols-10");
+      document.body.classList.add(cols === 10 ? "pdf-cols-10" : "pdf-cols-5");
+    }
 
-
-    function buildPdfReport(rows){
+    function buildPdfHistoryReport(rows){
       const r = Array.isArray(rows) ? rows : [];
 
-      const total = r.length;
-      const active = r.filter(x => !!x.frateCurent).length;
-      const free = total - active;
-      const urgent = r.filter(x => {
-        const z = Number(x.zileRamase);
-        return !!x.frateCurent && !isNaN(z) && z > 0 && z < 7;
-      }).length;
-      const expired = r.filter(x => {
-        const z = Number(x.zileRamase);
-        return !!x.frateCurent && !isNaN(z) && z <= 0;
-      }).length;
+      const cards = r.map(row => {
+        const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
+        const entries = flattenHistory(row);
 
-      const stamp = new Date().toLocaleString("ro-RO");
+        const body = entries.length
+          ? entries.map(e => `
+              <div class="pdf-entry">
+                <div class="n">${esc(e.nume || "—")}</div>
+                <div class="dp">
+                  <div>
+                    <div class="k">Dat</div>
+                    <div class="v">${esc(e.dat || "—")}</div>
+                  </div>
+                  <div>
+                    <div class="k">Predat</div>
+                    <div class="v">${esc(e.predat || "—")}</div>
+                  </div>
+                </div>
+              </div>
+            `).join("")
+          : `<div class="pdf-entry" style="opacity:.75;">Fără istoric</div>`;
 
-      const rowsHtml = r.map(row => {
-        const s = getStatusInfo(row);
         return `
-          <tr>
-            <td><b>${esc(row.teritoriu || "")}</b></td>
-            <td><span class="pdf-status ${s.cls}">${s.txt}</span></td>
-            <td>${esc(row.frateCurent || "—")}</td>
-            <td>${esc(row.dataAtribuireCurenta || "—")}</td>
-            <td>${!!row.frateCurent ? formatDeadlinePdf(row) : "—"}</td>
-            <td style="text-align:right;">${
-              (row.zileRamase===null || row.zileRamase===undefined) ? "—" : esc(String(row.zileRamase))
-            }</td>
-          </tr>
+          <div class="pdf-ter">
+            <h3>${esc(teritoriu)}</h3>
+            ${body}
+          </div>
         `;
       }).join("");
 
-      return `
-        <div class="pdf-title">Raport teritorii</div>
-        <div class="pdf-sub">Generat: ${esc(stamp)}</div>
-
-        <div class="pdf-summary">
-          <div class="pdf-box"><div class="k">TOTAL</div><div class="v">${total}</div></div>
-          <div class="pdf-box"><div class="k">ACTIVE</div><div class="v">${active}</div></div>
-          <div class="pdf-box"><div class="k">LIBERE</div><div class="v">${free}</div></div>
-          <div class="pdf-box"><div class="k">URGENTE</div><div class="v">${urgent}</div></div>
-          <div class="pdf-box"><div class="k">EXPIRATE</div><div class="v">${expired}</div></div>
-        </div>
-
-        <table class="pdf-table">
-          <thead>
-            <tr>
-              <th>Teritoriu</th>
-              <th>Status</th>
-              <th>Frate</th>
-              <th>Data atribuire</th>
-              <th>Limită</th>
-              <th>Zile</th>
-            </tr>
-          </thead>
-          <tbody>${rowsHtml}</tbody>
-        </table>
-      `;
+      return `<div class="pdf-grid">${cards}</div>`;
     }
 
-    /* ========= Render list ========= */
+    function exportPdf(){
+      const cols = (prompt("Câte teritorii pe rând? (5 sau 10)", "5") === "10") ? 10 : 5;
+      setPdfCols(cols);
+
+      const el = document.getElementById("pdfReport");
+      if (!el) return;
+
+      el.innerHTML = buildPdfHistoryReport(window.__rows);
+      window.print();
+    }
+
+    window.addEventListener("afterprint", () => {
+      document.body.classList.remove("pdf-cols-5","pdf-cols-10");
+    });
+
+    /* ========= UI list ========= */
     function renderList(rows){
       const list = document.getElementById("list");
       const info = document.getElementById("info");
@@ -524,7 +226,6 @@ return `
       const arr = Array.isArray(rows) ? rows : [];
       if (info) info.textContent = "Teritorii: " + arr.length;
 
-      // ✅ fără sortare → rămâne ordinea din sheet
       const filtered = q
         ? arr.filter(r =>
             (r.teritoriu || "").toLowerCase().includes(q) ||
@@ -603,13 +304,11 @@ return `
       });
     }
 
-    /* ========= JSONP callback ========= */
     window.populateTeritorii = function(rows){
       window.__rows = Array.isArray(rows) ? rows : [];
       renderList(window.__rows);
     };
 
-    /* ========= Actions ========= */
     async function refresh(){
       setStatus("", "");
       document.getElementById("list").innerHTML = `<div class="card">Se încarcă…</div>`;
@@ -625,40 +324,10 @@ return `
       }
     }
 
-function exportPdf(){
-  const cols = (prompt("Câte teritorii pe rând? (5 sau 10)", "5") === "10") ? 10 : 5;
-
-  setPdfCols(cols);
-
-  const el = document.getElementById("pdfReport");
-  if (!el) return;
-
-  el.innerHTML = buildPdfHistoryReport(window.__rows);
-
-  window.print();
-}
-
-// după print curățăm clasa
-window.addEventListener("afterprint", () => {
-  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
-});
-
-
-    // căutare locală fără refresh
     document.getElementById("q").addEventListener("input", ()=> renderList(window.__rows));
-
     window.addEventListener("load", refresh);
 
-    // deschide/închide automat <details> la print (dacă printezi UI normal)
-    window.addEventListener("beforeprint", () => {
-      document.querySelectorAll("details").forEach(d => d.open = true);
-    });
-window.addEventListener("afterprint", () => {
-  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
-});
-
-
-    // expunere globală pentru butoane onclick
+    // expunere globală pentru onclick
     window.refresh = refresh;
     window.exportPdf = exportPdf;
   </script>
