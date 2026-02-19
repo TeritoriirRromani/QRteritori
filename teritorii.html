@@ -72,6 +72,25 @@
         .replaceAll("'","&#039;");
     }
 
+    // Scoate numărul din final: "Zalău 12" -> "Zalău"
+function getBaseName(name){
+  return String(name || "")
+    .replace(/\s*\d+$/, "")  // elimină număr final
+    .trim();
+}
+
+// Generează culoare stabilă din text (mereu aceeași pt același nume)
+function stringToColor(str){
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const hue = hash % 360;
+  return `hsl(${hue}, 65%, 88%)`; // pastel frumos
+}
+
+
     function setStatus(t, cls){
       const el = document.getElementById("status");
       if (!el) return;
@@ -186,8 +205,12 @@ function buildPdfHistoryReport(rows, titleText){
   const title = titleText || "Teritorii Zalău Centru Rromani";
 
   const cards = r.map(row => {
-    const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
-    const entries = flattenHistory(row); // din codul tău (returnează [{nume,dat,predat}...])
+  const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
+  const base = getBaseName(teritoriu);
+  const color = stringToColor(base);
+
+  const entries = flattenHistory(row);
+ // din codul tău (returnează [{nume,dat,predat}...])
 
     const body = entries.length
       ? entries.map(e => `
@@ -208,7 +231,7 @@ function buildPdfHistoryReport(rows, titleText){
       : `<div class="pdf-entry" style="opacity:.75;">Fără istoric</div>`;
 
     return `
-      <div class="pdf-ter ${zoneClass(teritoriu)}">
+      <div class="pdf-ter  ${zoneClass(teritoriu)}" style="background:${color};">
         <h3>${esc(teritoriu)}</h3>
         ${body}
       </div>
