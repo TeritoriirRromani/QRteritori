@@ -1,16 +1,19 @@
 /* teritorii-print.css */
 
-/* IMPORTANT: tăiem orice padding/margini moștenite */
 @media print {
-  @page { size: A4; margin: 3mm; }
+  /* margini cât mai mici (browserul poate impune minim) */
+  @page { size: A4; margin: 2mm; }
+
   html, body {
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
   }
 
-  /* margini foarte mici (browserul poate impune minim) */
-  @page { size: A4; margin: 2mm; }
+  /* dacă introducere-style.css are body display:flex/center, îl anulăm la print */
+  body {
+    display: block !important;
+  }
 
   /* ascundem UI */
   .form-container, .bottom-nav, .page-info { display: none !important; }
@@ -18,23 +21,23 @@
   /* arătăm doar raportul */
   #pdfReport { display: block !important; }
 
-  /* să folosească lățimea completă a paginii */
-.pdf-report{
-  margin: 0;              /* nu mai centrează */
-  padding: 0;
-  background: white;
-  color: black;
-  width: 100%;
-}
-
+  /* raportul să înceapă SUS și să folosească toată lățimea */
+  .pdf-report{
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white;
+    color: black;
+  }
 
   /* HEADER raport */
   .pdf-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    gap: 6mm;
-    padding: 1.5mm 1.5mm 1.5mm 1.5mm;
+    gap: 4mm;
+    padding: 1mm 1mm 1mm 1mm;
     border-bottom: 0.3mm solid #ddd;
     margin: 0 0 1mm 0;
   }
@@ -72,7 +75,7 @@
     break-inside: avoid;
     page-break-inside: avoid;
 
-    overflow: hidden; /* ca să nu iasă textul */
+    overflow: hidden;
   }
 
   /* titlu teritoriu centrat */
@@ -122,16 +125,7 @@
     overflow-wrap: anywhere;
   }
 
-  /* culoare pe “zonă” */
-  .pdf-zone-zalau   { background: #fff7f7; }
-  .pdf-zone-ortelec { background: #f7fff8; }
-  .pdf-zone-alta    { background: #f7fbff; }
-
-  .pdf-zone-zalau   h3 { border-bottom-color: #d93025; }
-  .pdf-zone-ortelec h3 { border-bottom-color: #1e8e3e; }
-  .pdf-zone-alta    h3 { border-bottom-color: #365f9c; }
-
-  /* super-compact pentru 10 coloane (TOT portret) */
+  /* super-compact pentru 10 coloane (tot portret) */
   body.pdf-cols-10 .pdf-ter { padding: .5mm; }
   body.pdf-cols-10 .pdf-ter h3 { font-size: 6.2pt; margin-bottom: .4mm; padding-bottom: .4mm; }
   body.pdf-cols-10 .pdf-entry .n { font-size: 5.8pt; }
