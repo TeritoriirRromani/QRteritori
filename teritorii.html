@@ -278,8 +278,8 @@ const cards = r.map(row => {
   `;
 }
 
-function exportPdf(){
-  const cols = (prompt("Câte teritorii pe rând? (5 sau 10)", "5") === "10") ? 10 : 5;
+function exportPdf(cols){
+  cols = (cols === 10) ? 10 : 5;
 
   setPdfCols(cols);
 
@@ -290,10 +290,6 @@ function exportPdf(){
 
   window.print();
 }
-
-window.addEventListener("afterprint", () => {
-  document.body.classList.remove("pdf-cols-5","pdf-cols-10");
-});
 
 // curățăm clasa după print
 window.addEventListener("afterprint", () => {
