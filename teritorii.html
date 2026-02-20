@@ -97,12 +97,37 @@ function baseKey(name){
 }
 
 // Generează culoare stabilă din text (mereu aceeași pt același nume)
-function stringToHsl(str){
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+// Paletă modernă pastel (curată, profesională)
+const MODERN_PALETTE = [
+  { h: 210, s: 80, l: 92 }, // albastru deschis
+  { h: 195, s: 75, l: 92 }, // cyan soft
+  { h: 170, s: 60, l: 90 }, // verde mentă
+  { h: 145, s: 55, l: 90 }, // verde soft
+  { h: 35,  s: 80, l: 92 }, // crem piersică
+  { h: 15,  s: 85, l: 92 }, // coral deschis
+  { h: 270, s: 60, l: 92 }, // mov pastel
+  { h: 250, s: 70, l: 92 }, // indigo soft
+  { h: 330, s: 70, l: 93 }, // roz prăfuit
+  { h: 45,  s: 90, l: 93 }  // galben soft
+];
 
-  const hue = ((hash % 360) + 360) % 360;
-  return { h: hue, s: 65, l: 90 }; // pastel, mai "airy"
+// Selectează culoare stabilă din paletă
+function stringToHsl(str){
+  // hash stabil
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  // folosim golden angle pentru distribuție uniformă
+  const GOLDEN_ANGLE = 137.508;
+  const hue = (Math.abs(hash) * GOLDEN_ANGLE) % 360;
+
+  return {
+    h: hue,
+    s: 65,   // saturație moderată
+    l: 92    // pastel modern
+  };
 }
 function hslToCss({h,s,l}){ return `hsl(${h} ${s}% ${l}%)`; }
 
@@ -226,10 +251,10 @@ const cards = r.map(row => {
   const teritoriu = row?.teritoriu ? String(row.teritoriu) : "";
   const key = baseKey(teritoriu);
 
-  const c = stringToHsl(key);
-  const bg = hslToCss({ ...c, l: 90 });   // fundal card
-  const bar = hslToCss({ ...c, l: 45 });  // banda de sus (mai închis)
-  const line = hslToCss({ ...c, l: 60 }); // linii / accent
+const c = stringToHsl(key);
+const bg = hslToCss({ ...c, l: 92 });
+const bar = hslToCss({ ...c, l: 45 });
+const line = hslToCss({ ...c, l: 65 });
 
   const entries = flattenHistory(row);
 
