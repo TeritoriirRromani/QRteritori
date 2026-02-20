@@ -105,18 +105,24 @@ summary{ cursor:pointer; font-weight:800; opacity:.85; }
 }
 
 /* PDF buttons container */
+/* PDF buttons – same width logic as Reîncarcă */
 .pdf-actions{
   display:flex;
   gap:10px;
-  flex-wrap:wrap;         /* dacă nu încape, trece pe rând următor */
-  justify-content:flex-start; /* se aliniază ca restul butoanelor */
-  align-items:stretch;
   width:100%;
 }
 
-@media (max-width: 768px) {
-  .pdf-actions {
-    flex-direction: column;  /* pe telefon unul sub altul */
-    align-items: stretch;
+/* fiecare buton ocupă jumătate */
+.pdf-actions .btn-pdf{
+  flex:1;
+  text-align:center;
+  padding:10px 12px;
+  border-radius:12px;
+}
+
+/* pe telefon – unul sub altul */
+@media (max-width:768px){
+  .pdf-actions{
+    flex-direction:column;
   }
 }
